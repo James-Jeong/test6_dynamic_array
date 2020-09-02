@@ -45,7 +45,7 @@ struct dynamicIntArray_s
 	int size;
 	// 동적 배열의 주소
 	int *data;
-	// 동적 배열의 모든 원소를 담고 있는 문자열
+	// 동적 배열의 모든 원소를 담고 있는 문자열의 주소
 	char *stringOfArray;
 };
 
