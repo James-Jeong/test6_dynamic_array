@@ -905,7 +905,6 @@ char *dynamicIntArrayToString(dynamicIntArray_t *array)
 	}
 
 	int sumOfDigits = 0;
-	int digitOfSize = 0;
 	int loopIndex = 0;
 	int stringLength = 0;
 	char *string = array->stringOfArray;
@@ -915,13 +914,11 @@ char *dynamicIntArrayToString(dynamicIntArray_t *array)
 	{
 		sumOfDigits += getDigitOfNumber(arrayData[loopIndex]);
 	}
-	// 맨 뒤에 배열 전체 크기도 추가해야하므로 크기값의 자리수도 구한다.
-	digitOfSize = getDigitOfNumber(size);
 
 	// 생성할 문자열의 총 길이를 계산한다.
-	// [총 길이] = [모든 원소들의 자리수 합] + [동적 배열의 전체 크기의 자리수] + [동적 배열의 전체 크기(size) * 3]
+	// [총 길이] = [모든 원소들의 자리수 합] + [동적 배열의 전체 크기(size) * 3]
 	// [size * 3] : [쉼표 개수] + [공백 개수] + [추가적인 여유 공간]
-	stringLength = sumOfDigits + digitOfSize + (size * 3);
+	stringLength = sumOfDigits + (size * 3);
 
 	// 2. 동적 배열 관리 구조체 최초 할당 시 문자열이 할당되지 않으므로 
 	// 함수 최초 호출 시 할당하도록 한다.
@@ -952,10 +949,7 @@ char *dynamicIntArrayToString(dynamicIntArray_t *array)
 		addNumberToString(string, arrayData[loopIndex]);
 		if ((loopIndex + 1) < size) strcat(string, ",");
 	}
-	strcat(string, " },");
-
-	// 동적 배열의 전체 크기도 문자열로 변환해서 추가한다.
-	addNumberToString(string, size);
+	strcat(string, " }");
 
 	// 4. 문자열의 쓰레기값 출력 방지하기 위해 문자열의 맨 끝에 널 문자 추가한다.
 	string[strlen(string)] = '\0';
