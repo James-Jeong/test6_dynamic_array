@@ -45,6 +45,8 @@ struct dynamicIntArray_s
 	int size;
 	// 동적 배열의 주소
 	int *data;
+	// 동적 배열의 모든 원소를 담고 있는 문자열
+	char *stringOfArray;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +78,7 @@ int dynamicIntArrayReverse(const dynamicIntArray_t *array);
 int dynamicIntArrayFill(const dynamicIntArray_t *array, int datum);
 int *dynamicIntArrayGetArrayPtr(const dynamicIntArray_t *array);
 int dynamicIntArrayCheckBoundary(const dynamicIntArray_t *array, int index);
-void dynamicIntArrayPrintAll(const dynamicIntArray_t *array);
+char *dynamicIntArrayToString(dynamicIntArray_t *array);
 
 int dynamicIntArrayGetSize(const dynamicIntArray_t *array);
 int dynamicIntArraySetSize(dynamicIntArray_t *array, int size);

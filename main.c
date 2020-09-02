@@ -71,7 +71,8 @@ int main(int argc, char **argv)
 		}
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
+	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
 	printMsg("[INSERT_AT TEST]", NORMAL, 0);
@@ -83,7 +84,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -96,7 +97,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -109,7 +110,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -133,7 +134,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -146,7 +147,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -159,7 +160,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -171,7 +172,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array2);
+	printMsg(dynamicIntArrayToString(array2), NORMAL, 0);
 	if(dynamicIntArrayDelete(&array2) == FAIL)
 	{
 		printMsg("동적 배열 관리 구조체 메모리 해제 실패. (dynamicIntArrayDelete)", DEBUG, 0);
@@ -188,7 +189,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -207,7 +208,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		printf("| @ [index_of(5) : %d]\n", indexofResult);
+		printf("result : %d\n", indexofResult);
 	}
 	//////////////////////////////////////////////////////////////
 
@@ -227,7 +228,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		printf("| @ [index_of(1) : %d]\n", indexofResult);
+		printf("result : %d\n", indexofResult);
 	}
 	//////////////////////////////////////////////////////////////
 
@@ -247,7 +248,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		printf("| @ [lastIndexOf(2) : %d]\n", lastindexofResult);
+		printf("result : %d\n", lastindexofResult);
 	}
 	//////////////////////////////////////////////////////////////
 
@@ -267,7 +268,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		printf("| @ [index_of(9) : %d]\n", indexofResult);
+		printf("result : %d\n", indexofResult);
 	}
 	//////////////////////////////////////////////////////////////
 
@@ -281,7 +282,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -294,7 +295,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -307,7 +308,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -320,7 +321,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -338,7 +339,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		printf("| @ [find(even) : %d]\n", findResult);
+		printf("result : %d\n", findResult);
 	}
 	//////////////////////////////////////////////////////////////
 
@@ -357,7 +358,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		printf("| @ [find(odd) : %d]\n", findResult);
+		printf("result : %d\n", findResult);
 	}
 	//////////////////////////////////////////////////////////////
 
@@ -376,7 +377,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		printf("| @ [find(positive) : %d]\n", findResult);
+		printf("result : %d\n", findResult);
 	}
 	//////////////////////////////////////////////////////////////
 
@@ -395,7 +396,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		printf("| @ [find(negative) : %d]\n", findResult);
+		printf("result : %d\n", findResult);
 	}
 	//////////////////////////////////////////////////////////////
 
@@ -414,7 +415,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		printf("| @ [find(zero) : %d]\n", findResult);
+		printf("result : %d\n", findResult);
 	}
 	//////////////////////////////////////////////////////////////
 
@@ -434,7 +435,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		printf("| @ [lastIndexOf(2) : %d]\n", findResult);
+		printf("result : %d\n", findResult);
 	}
 	//////////////////////////////////////////////////////////////
 
@@ -454,7 +455,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		printf("| @ [lastIndexOf(3) : %d]\n", lastindexofResult);
+		printf("result : %d\n", lastindexofResult);
 	}
 	//////////////////////////////////////////////////////////////
 
@@ -468,7 +469,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -493,7 +494,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -506,7 +507,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	dynamicIntArrayPrintAll(array);
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -518,6 +519,8 @@ int main(int argc, char **argv)
 		printMsg("dynamicIntArraySetElement 실패.", ERROR, 0);
 		//return FAIL;
 	}
+
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -528,6 +531,10 @@ int main(int argc, char **argv)
 	{
 		printMsg("dynamicIntArrayGetElement 실패.", ERROR, 0);
 		//return FAIL;
+	}
+	else
+	{
+		printf("result : %d\n", getResult);
 	}
 	//////////////////////////////////////////////////////////////
 
@@ -542,7 +549,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		printf("| @ [get(1) : %d]\n", getResult);
+		printf("result : %d\n", getResult);
 	}
 	//////////////////////////////////////////////////////////////
 

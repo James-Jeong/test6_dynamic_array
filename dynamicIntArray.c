@@ -8,8 +8,9 @@ static void *reallocateMemory(void *memory, size_t size);
 static void *allocateMemory(size_t size);
 static void clearMemory(void *memory, size_t size);
 static void freeMemory(void **memory);
-static void convertIntArrayToString(char *arrayElements, const int *data, int size);
 static int getBufferSize(const char *format, ...);
+__inline static int getDigitOfNumber(int number);
+__inline static void addNumberToString(char *string, int number);
 
 ///////////////////////////////////////////////////////////////////////////////////////
 /// Functions for dynamicIntArray_t
@@ -41,6 +42,7 @@ dynamicIntArray_t *dynamicIntArrayNew(int size)
 /**
  * @fn int dynamicIntArrayInitialize(dynamicIntArrya_t *array, int size)
  * @brief 동적 배열 관리 구조체를 초기화하는 함수
+ * @param array 동적 배열 관리 구조체 포인터(출력)
  * @param size 동적 배열 크기(입력)
  * @return 성공 시 SUCCESS, 실패 시 FAIL 반환
  */
@@ -69,6 +71,8 @@ int dynamicIntArrayInitialize(dynamicIntArray_t *array, int size)
 		}
 		return FAIL;
 	}
+
+	array->stringOfArray = NULL;
 
 	return SUCCESS;
 }
@@ -165,7 +169,13 @@ int dynamicIntArrayFinal(dynamicIntArray_t *array)
 		return FAIL;
 	}
 
-	freeMemory((void*)(&arrayData));
+	freeMemory((void**)(&arrayData));
+
+	char *string = array->stringOfArray;
+	if(checkObjectNull(string, NULL) == NO)
+	{
+		freeMemory((void**)(&string));
+	}
 
 	return SUCCESS;
 }
@@ -295,7 +305,6 @@ dynamicIntArray_t *dynamicIntArrayAppend(dynamicIntArray_t *array, int datum)
  */
 dynamicIntArray_t *dynamicIntArrayInsertAt(dynamicIntArray_t *array, int index, int datum)
 {
-
 	if(dynamicIntArrayCheckBoundary(array, index) == FAIL)
 	{
 		printMsg("Insert at 실패. 인덱스 오류. (dynamicIntArrayInsertAt)", ERROR, 0);
@@ -875,31 +884,83 @@ int dynamicIntArrayCheckBoundary(const dynamicIntArray_t *array, int index)
 }
 
 /**
- * @fn void dynamicIntArrayPrintAll(const dynamicIntArray_t *array)
- * @brief 동적 배열 관리 구조체가 관리하는 동적 배열의 모든 요소를 담은 문자열을 반환하는 함수
+ * @fn char *dynamicIntArrayToString(dynamicIntArray_t *array)
+ * @brief 동적 배열의 모든 원소를 담고 있는 문자열을 반환하는 함수
  * @param array 동적 배열 관리 구조체 포인터(입력, 읽기 전용)
- * @return 반환값 없음
+ * @return 성공 시 생성된 문자열, 실패 시 NULL 반환
  */
-void dynamicIntArrayPrintAll(const dynamicIntArray_t *array)
+char *dynamicIntArrayToString(dynamicIntArray_t *array)
 {
 	int *arrayData = dynamicIntArrayGetArrayPtr(array);
-	if(checkObjectNull(arrayData, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArrayPrintAll)") == YES)
+	if(checkObjectNull(arrayData, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArrayToString)") == YES)
 	{
-		return;
+		return NULL;
 	}
 
 	int size = dynamicIntArrayGetSize(array);
 	if(size == UNKNOWN)
 	{
-		printMsg("dynamicIntArrayCheckBoundary 실패. (dynamicIntArrayPrintAll, array:%p)", DEBUG, 1, array);
-		return;
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayToString, array:%p)", DEBUG, 1, array);
+		return NULL;
 	}
 
-	int stringLength = ((size * 3) + 2);
-	char arrayString[stringLength];
-	clearMemory(arrayString, stringLength);
-	convertIntArrayToString(arrayString, arrayData, size);
-	printMsg(arrayString, NORMAL, 0);
+	int sumOfDigits = 0;
+	int digitOfSize = 0;
+	int loopIndex = 0;
+	int stringLength = 0;
+	char *string = array->stringOfArray;
+
+	// 1. 동적 배열에 담긴 숫자들을 문자열로 변환하기 위해서 자리수를 모두 더한 값을 구한다.
+	for( ; loopIndex < size; loopIndex++)
+	{
+		sumOfDigits += getDigitOfNumber(arrayData[loopIndex]);
+	}
+	// 맨 뒤에 배열 전체 크기도 추가해야하므로 크기값의 자리수도 구한다.
+	digitOfSize = getDigitOfNumber(size);
+
+	// 생성할 문자열의 총 길이를 계산한다.
+	stringLength = sumOfDigits + digitOfSize + (size * 3);
+
+	// 2. 동적 배열 관리 구조체 최초 할당 시 문자열이 할당되지 않으므로 
+	// 함수 최초 호출 시 할당하도록 한다.
+	if(checkObjectNull(string, NULL) == YES)
+	{
+		string = (char*)allocateMemory(stringLength);
+		if(checkObjectNull(string, "메모리 참조 실패, 새로 할당된 문자열이 NULL. (dynamicIntArrayToString)") == YES)
+		{
+			return NULL;
+		}
+	}
+	// 이전에 한 번 이상 호출되었다면, 내용을 모두 지우고 새로운 크기로 재할당한다.
+	else
+	{
+		clearMemory(string, strlen(string));
+		string = (char*)reallocateMemory(string, stringLength);
+		if(checkObjectNull(string, "메모리 참조 실패, 재할당된 문자열이 NULL. (dynamicIntArrayToString)") == YES)
+		{
+			return NULL;
+		}
+	}
+
+	// 3. 할당된 문자열에 동적 배열에 저장된 값을 하나씩 문자열로 변환해서 추가한다.
+	loopIndex = 0;
+	string[loopIndex] = '{';
+	for (; loopIndex < size; loopIndex++)
+	{
+		addNumberToString(string, arrayData[loopIndex]);
+		if ((loopIndex + 1) < size) strcat(string, ",");
+	}
+	strcat(string, " },");
+
+	// 동적 배열의 전체 크기도 문자열로 변환해서 추가한다.
+	addNumberToString(string, size);
+
+	// 4. 문자열의 쓰레기값 출력 방지하기 위해 문자열의 맨 끝에 널 문자 추가한다.
+	string[strlen(string)] = '\0';
+
+	// 5. 사용된 주소값을 다시 구조체의 문자열 포인터 변수에 저장한다.
+	array->stringOfArray = string;
+	return string;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -922,7 +983,7 @@ void printMsg(const char *msg, int type, int argc, ...)
 	int size = getBufferSize(msg, argPointer);
 	if(size == FAIL)
 	{
-		printf("\t# [ERROR] 가변 인자를 포함한 문자열의 길이 계산 실패. (printMsg)\n");
+		printf("가변 인자를 포함한 문자열의 길이 계산 실패. (printMsg)\n");
 		return;
 	}
 
@@ -934,7 +995,7 @@ void printMsg(const char *msg, int type, int argc, ...)
 			|| isErrorForVSN >= sizeof(printBuffer)) // for glibc >= 2.1
 	{
 #if IS_PRINT_DEBUG
-		printf("\t# [DEBUG] 출력 실패. vsnprintf 함수 동작 오류. (printMsg)\n");
+		printf("출력 실패. vsnprintf 함수 동작 오류. (printMsg)\n");
 #endif
 		return;
 	}
@@ -946,13 +1007,13 @@ void printMsg(const char *msg, int type, int argc, ...)
 #if IS_PRINT_DEBUG
 	else if (type == DEBUG)
 	{
-		printf("\t# [DEBUG] [%s]\n", printBuffer);
+		printf("%s\n", printBuffer);
 	}
 #endif
 #if IS_PRINT_ERROR
 	else if (type == ERROR)
 	{
-		printf("\t! [ERROR] [%s]\n", printBuffer);
+		printf("%s\n", printBuffer);
 	}
 #endif
 
@@ -1057,47 +1118,6 @@ static void freeMemory(void **memory)
 }
 
 /**
- * @fn static char *convertIntArrayToString(char *arrayElements, const int *data, int size)
- * @brief int 형 배열의 전체 구성을 문자열로 변환하는 함수
- * @param msg 변환된 문자열을 저장할 변수(출력)
- * @param data 변환할 배열(입력, 읽기 전용)
- * @param size 전체 배열의 크기(입력)
- * @return 반환값 없음
- */
-static void convertIntArrayToString(char *arrayElements, const int *data, int size)
-{
-	if(size <= 0)
-	{
-		printMsg("크기 지정 실패. 크기가 0 보다 작거나 같음. (convertIntArrayToString, size:%d)", ERROR, 1, size);
-		return ;
-	}
-
-	if(checkObjectNull(data, "메모리 참조 실패, 동적 배열이 NULL. (convertIntArrayToString)") == YES)
-	{
-		return;
-	}
-
-	if(checkObjectNull(arrayElements, "메모리 참조 실패, char *arrayElements is NULL. (convertIntArrayToString)") == YES)
-	{
-		return;
-	}
-
-	int loopIndex = 0;
-	arrayElements[loopIndex] = '{';
-	for (; loopIndex < size; loopIndex++)
-	{
-		char buf[3];
-		sprintf(buf, " %d", data[loopIndex]);
-		strcat(arrayElements, buf);
-		if ((loopIndex + 1) < size)
-		{
-			strcat(arrayElements, ",");
-		}
-	}
-	strcat(arrayElements, " }");
-}
-
-/**
  * @fn static int getBufferSize(const char *format, ...)
  * @brief 가변 인자가 포함된 문자열의 총 길이를 계산하여 반환하는 함수
  * @param msg 가변 인자가 포함된 문자열(입력, 읽기 전용) 
@@ -1117,5 +1137,39 @@ static int getBufferSize(const char *msg, ...)
 	va_end(args);
 
 	return (result + 1); // [+1] : for NULL character
+}
+
+/**
+ * @fn __inline static int getDigitOfNumber(int number)
+ * @brief 정수의 자리수를 계산해서 반환하는 함수
+ * @param number 자리수를 계산할 정수
+ * @return 항상 정수의 자리수 반환
+ */
+__inline static int getDigitOfNumber(int number)
+{
+	int countOfDigit = 0;
+
+	while(number != 0)
+	{
+		countOfDigit++;
+		number /= 10;
+	}
+
+	return countOfDigit;
+}
+
+/**
+ * @fn __inline static void addNumberToString(char *string, int number)
+ * @brief 정수를 문자열로 변환해서 전달받은 문자열에 추가하는 함수
+ * @param string 추가될 문자열(출력)
+ * @param number 추가할 정수(입력)
+ * @return 반환값 없음
+ */
+__inline static void addNumberToString(char *string, int number)
+{
+	int digitOfNumber = getDigitOfNumber(number);
+	char buf[digitOfNumber + 1];
+	sprintf(buf, " %d", number);
+	strcat(string, buf);
 }
 
