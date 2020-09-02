@@ -886,7 +886,7 @@ int dynamicIntArrayCheckBoundary(const dynamicIntArray_t *array, int index)
 /**
  * @fn char *dynamicIntArrayToString(dynamicIntArray_t *array)
  * @brief 동적 배열의 모든 원소를 담고 있는 문자열을 반환하는 함수
- * @param array 동적 배열 관리 구조체 포인터(입력, 읽기 전용)
+ * @param array 동적 배열 관리 구조체 포인터(입력)
  * @return 성공 시 생성된 문자열, 실패 시 NULL 반환
  */
 char *dynamicIntArrayToString(dynamicIntArray_t *array)
