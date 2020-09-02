@@ -481,12 +481,13 @@ int main(int argc, char **argv)
 		printMsg("dynamicIntArrayRemoveAt 실패.", ERROR, 0);
 		//return FAIL;
 	}
+
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
 	printMsg("[FILL TEST]", NORMAL, 0);
 	printMsg("배열을 5로 채움", NORMAL, 0);
-	removeatResult = dynamicIntArrayRemoveAt(array, 4);
 	fillResult = dynamicIntArrayFill(array, 5);
 	if (fillResult == FAIL)
 	{
