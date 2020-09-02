@@ -919,6 +919,8 @@ char *dynamicIntArrayToString(dynamicIntArray_t *array)
 	digitOfSize = getDigitOfNumber(size);
 
 	// 생성할 문자열의 총 길이를 계산한다.
+	// [총 길이] = [모든 원소들의 자리수 합] + [동적 배열의 전체 크기의 자리수] + [동적 배열의 전체 크기(size) * 3]
+	// [size * 3] : [쉼표 개수] + [공백 개수] + [추가적인 여유 공간]
 	stringLength = sumOfDigits + digitOfSize + (size * 3);
 
 	// 2. 동적 배열 관리 구조체 최초 할당 시 문자열이 할당되지 않으므로 
