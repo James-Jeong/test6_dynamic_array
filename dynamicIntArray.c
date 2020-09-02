@@ -1144,7 +1144,7 @@ static int getBufferSize(const char *msg, ...)
 /**
  * @fn __inline static int getDigitOfNumber(int number)
  * @brief 정수의 자리수를 계산해서 반환하는 함수
- * @param number 자리수를 계산할 정수
+ * @param number 자리수를 계산할 정수(입력)
  * @return 항상 정수의 자리수 반환
  */
 __inline static int getDigitOfNumber(int number)
