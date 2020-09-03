@@ -49,6 +49,7 @@ int main(int argc, char **argv)
 	dynamicIntArray_t *removeatResult = NULL;
 
 	int setResult = UNKNOWN;
+	int clearResult = UNKNOWN;
 	int reverseResult = UNKNOWN;
 	int fillResult = UNKNOWN;
 	int findResult = UNKNOWN;
@@ -172,7 +173,20 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
+	printMsg("저장된 문자열 : %s", NORMAL, 1, array2->stringOfArray);
 	printMsg(dynamicIntArrayToString(array2), NORMAL, 0);
+
+	printMsg("[CLEAR TEST]", NORMAL, 0);
+	clearResult = dynamicIntArrayClear(array2);
+	if (clearResult == FAIL)
+	{
+		printMsg("dynamicIntArrayClear 실패.", ERROR, 0);
+		//return FAIL;
+	}
+
+	printMsg("저장된 문자열 : %s", NORMAL, 1, array2->stringOfArray);
+	printMsg(dynamicIntArrayToString(array2), NORMAL, 0);
+
 	dynamicIntArrayDelete(&array2);
 	//////////////////////////////////////////////////////////////
 

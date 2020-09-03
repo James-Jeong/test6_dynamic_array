@@ -244,7 +244,7 @@ int dynamicIntArrayGetElement(const dynamicIntArray_t *array, int index, int *is
 		*isError = FAIL;
 		return NONE;
 	}
-	
+
 	if(checkObjectNull(array->data, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArrayGetElement)") == YES)
 	{
 		*isError = FAIL;
@@ -849,8 +849,8 @@ void printMsg(const char *msg, int type, int argc, ...)
 	char printBuffer[size];
 	memset(printBuffer, 0, (size_t)size);
 
-	int isErrorForVSN = vsnprintf(printBuffer, (size_t)size, msg, argPointer);
-	if(isErrorForVSN <= 0 // for glibc < 2.1
+	int isErrorForVSN = vsnprintf(printBuffer, sizeof(printBuffer), msg, argPointer);
+	if(isErrorForVSN < 0 // for glibc < 2.1
 			|| (size_t)isErrorForVSN >= sizeof(printBuffer)) // for glibc >= 2.1
 	{
 #if IS_PRINT_DEBUG
@@ -945,7 +945,7 @@ static int getBufferSize(const char *msg, ...)
 	va_start(args, msg);
 
 	int result = vsnprintf(NULL, 0, msg, args);
-	if(result <= 0) // for glibc < 2.1
+	if(result < 0)
 	{
 		return FAIL;
 	}
@@ -978,10 +978,10 @@ static int getDigitOfNumber(int number)
 	return countOfDigit;
 
 	/* if (sprintf(buf, "%d", number) < 0)
-	{
-		return FAIL;
-	}
-	return strlen(buf); */
+	   {
+	   return FAIL;
+	   }
+	   return strlen(buf); */
 }
 
 /**
@@ -1000,8 +1000,10 @@ static int addNumberToString(char *string, int number)
 
 	int digitOfNumber = getDigitOfNumber(number);
 	char buf[digitOfNumber + 1];
-	if(sprintf(buf, " %d", number) < 0)
+	int result = sprintf(buf, " %d", number);
+	if(result < 0)
 	{
+		printMsg("snprintf 함수 동작 오류. (addNumberToString, returnValue:%d)", DEBUG, 1, result);
 		return FAIL;
 	}
 	strcat(string, buf);
