@@ -261,7 +261,7 @@ dynamicIntArray_t *dynamicIntArrayAppend(dynamicIntArray_t *array, int datum)
 
 	if(dynamicIntArraySetElement(array, (array->size - 1), datum) == FAIL)
 	{
-		printMsg("배열 저장 오류. dynamicIntArraySetElement 동작 실패. (dynamicIntArrayReverse)", DEBUG, 0);
+		printMsg("배열 저장 오류. dynamicIntArraySetElement 동작 실패. (dynamicIntArrayAppend)", DEBUG, 0);
 		return NULL;
 	}
 
@@ -314,7 +314,7 @@ dynamicIntArray_t *dynamicIntArrayInsertAt(dynamicIntArray_t *array, int index, 
 
 	if(dynamicIntArraySetElement(array, index, datum) == FAIL)
 	{
-		printMsg("배열 저장 오류. dynamicIntArraySetElement 동작 실패. (dynamicIntArrayReverse)", DEBUG, 0);
+		printMsg("배열 저장 오류. dynamicIntArraySetElement 동작 실패. (dynamicIntArrayInsertAt)", DEBUG, 0);
 		return NULL;
 	}
 
@@ -378,7 +378,13 @@ dynamicIntArray_t *dynamicIntArrayRemoveAt(dynamicIntArray_t *array, int index)
  */
 int dynamicIntArrayIndexOf(const dynamicIntArray_t *array, int datum)
 {
-	int size = array->size;
+	int size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayIndexOf, array:%p)", DEBUG, 1, array);
+		return FAIL;
+	}
+
 	int targetIndex = UNKNOWN;
 	int value = UNKNOWN;
 	int loopIndex = 0;
@@ -412,7 +418,13 @@ int dynamicIntArrayIndexOf(const dynamicIntArray_t *array, int datum)
  */
 int dynamicIntArrayLastIndexOf(const dynamicIntArray_t *array, int datum)
 {
-	int size = array->size;
+	int size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayLastIndexOf, array:%p)", DEBUG, 1, array);
+		return FAIL;
+	}
+
 	int targetIndex = UNKNOWN;
 	int value = UNKNOWN;
 	int loopIndex = size - 1;
@@ -446,7 +458,13 @@ int dynamicIntArrayLastIndexOf(const dynamicIntArray_t *array, int datum)
  */
 int dynamicIntArrayFind(const dynamicIntArray_t *array, compareInt1Param_f func)
 {
-	int size = array->size;
+	int size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayFind, array:%p)", DEBUG, 1, array);
+		return FAIL;
+	}
+
 	int targetIndex = UNKNOWN;
 	int value = UNKNOWN;
 	int loopIndex = 0;
@@ -479,7 +497,13 @@ int dynamicIntArrayFind(const dynamicIntArray_t *array, compareInt1Param_f func)
  */
 int dynamicIntArrayReverse(const dynamicIntArray_t *array)
 {
-	int size = array->size;
+	int size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayReverse, array:%p)", DEBUG, 1, array);
+		return FAIL;
+	}
+
 	int loopIndex = 0;
 	int reverseLoopIndex = size - 1;
 	int tempArrayValue = UNKNOWN;
@@ -736,7 +760,6 @@ char *dynamicIntArrayToString(dynamicIntArray_t *array)
 	// [총 길이] = [모든 원소들의 자리수 합] + [동적 배열의 전체 크기(size) * 2 + 3]
 	// [size * 2 + 2] : [쉼표 개수(size 보다 1개 적다. size - 1)] + [공백 개수(size 만큼 있고 앞에 하나 더 있다. size + 1)] + [중괄호 개수(2)] + [널 문자(1)]
 	stringLength = sumOfDigits + (size * 2 + 3);
-	printMsg("sumOfDigits : %d, length : %d", NORMAL, 2, sumOfDigits, stringLength);
 
 	// 2. 동적 배열 관리 구조체 최초 생성 시 문자열이 생성되지 않으므로 
 	// 함수 최초 호출 시 생성하도록 한다.
