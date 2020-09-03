@@ -173,10 +173,7 @@ int main(int argc, char **argv)
 	}
 
 	printMsg(dynamicIntArrayToString(array2), NORMAL, 0);
-	if(dynamicIntArrayDelete(&array2) == FAIL)
-	{
-		printMsg("동적 배열 관리 구조체 메모리 해제 실패. (dynamicIntArrayDelete)", DEBUG, 0);
-	}
+	dynamicIntArrayDelete(&array2);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
@@ -555,10 +552,7 @@ int main(int argc, char **argv)
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
-	if(dynamicIntArrayDelete(&array) == FAIL)
-	{
-		printMsg("동적 배열 관리 구조체 메모리 해제 실패. (dynamicIntArrayDelete)", DEBUG, 0);
-	}
+	dynamicIntArrayDelete(&array);
 
 	printMsg("< 테스트 프로그램 종료 >", NORMAL, 0);
 	//////////////////////////////////////////////////////////////

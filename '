@@ -4,10 +4,17 @@
 /// Predefinitions of Static Util Functions
 ///////////////////////////////////////////////////////////////////////////////////////
 
-static void *reallocateMemory(void *memory, size_t size);
 static int getBufferSize(const char *format, ...);
 static int getDigitOfNumber(int number);
-static int addNumberToString(char *string, int number);
+static void addNumberToString(char *string, int number);
+
+///////////////////////////////////////////////////////////////////////////////////////
+/// Predefinitions of Static Functions for dynamicIntArray_t
+///////////////////////////////////////////////////////////////////////////////////////
+
+static int dynamicIntArraySetSize(dynamicIntArray_t *array, int size);
+static int dynamicIntArrayIncSize(dynamicIntArray_t *array);
+static int dynamicIntArrayDecSize(dynamicIntArray_t *array);
 
 ///////////////////////////////////////////////////////////////////////////////////////
 /// Functions for dynamicIntArray_t
@@ -21,16 +28,15 @@ static int addNumberToString(char *string, int number);
  */
 dynamicIntArray_t *dynamicIntArrayNew(int size)
 {
-	dynamicIntArray_t *array = (dynamicIntArray_t*)malloc(sizeof(dynamicIntArray_t));
-	if(checkObjectNull(array, "메모리 참조 실패, 생성된 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayNew)") == YES)
+	dynamicIntArray_t *array = (dynamicIntArray_t*)allocateMemory(sizeof(dynamicIntArray_t));
+	if(checkObjectNull(array, "메모리 참조 실패, 할당된 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayNew)") == YES)
 	{
 		return NULL;
 	}
 
 	if(dynamicIntArrayInitialize(array, size) == FAIL)
 	{
-		printMsg("초기화 실패, 생성된 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayNew)", DEBUG, 0);
-		free(array);
+		printMsg("초기화 실패, 할당된 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayNew)", DEBUG, 0);
 		return NULL;
 	}
 
@@ -46,76 +52,70 @@ dynamicIntArray_t *dynamicIntArrayNew(int size)
  */
 int dynamicIntArrayInitialize(dynamicIntArray_t *array, int size)
 {
-	if(checkObjectNull(array, "메모리 참조 실패, 생성된 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayInitialize)") == YES)
+	if(checkObjectNull(array, "메모리 참조 실패, 할당된 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayInitialize)") == YES)
 	{
 		return FAIL;
 	}
 
-	if(size <= 0)
-	{
-		printMsg("크기 지정 실패. 크기가 0 보다 작거나 같음. (dynamicIntArrayInitialize, size:%d)", ERROR, 1, size);
-		return FAIL;
-	}
-
-	array->size = size;
-	array->stringOfArray = NULL;
-
-	size_t totalSize = (size_t)size * sizeof(int);
-	array->data = (int*)calloc(totalSize, sizeof(int));
+	size_t totalSize = size * sizeof(int);
+	array->data = (int*)calloc(totalSize, 0);
 	if(checkObjectNull(array->data, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArrayInitialize)") == YES)
 	{
+		free(array);
 		return FAIL;
 	}
+
+	array->size = 0;
+	array->stringOfArray = NULL;
 
 	return SUCCESS;
 }
 
 /**
- * @fn dynamicIntArray_t *dynamicIntArrayResize(dynamicIntArray_t *array, int size, int isKeep)
- * @brief 동적 배열 관리 구조체가 관리하고 있는 동적 배열을 재생성하는 함수
+ * @fn dynamicIntArray_t *dynamicIntArrayResize(dynamicIntArray_t *array, int isKeep)
+ * @brief 동적 배열 관리 구조체가 관리하고 있는 동적 배열을 재할당하는 함수
  * @param array 동적 배열 관리 구조체 포인터(입력)
  * @param size  변경할 크기(입력)
- * @param isKeep 재생성 시 기존 데이터 유지 여부(입력)
+ * @param isKeep 재할당 시 기존 데이터 유지 여부(입력)
  * @return 성공 시 동적 배열 관리 구조체의 주소, 실패 시 NULL 반환
  */
 dynamicIntArray_t *dynamicIntArrayResize(dynamicIntArray_t *array, int size, int isKeep)
 {
-	if(checkObjectNull(array, "메모리 참조 실패, 동적 배열 관리 구조체가 NULL. (dynamicIntArrayResize)") == YES)
-	{
-		return NULL;
-	}
-
 	if(size <= 0)
 	{
 		printMsg("크기 지정 실패. 크기가 0 보다 작거나 같음. (dynamicIntArrayResize, size:%d)", ERROR, 1, size);
 		return NULL;
 	}
 
-	if((isKeep != YES) && (isKeep != NO))
+	if(checkObjectNull(array->data, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArrayResize)") == YES)
 	{
-		printMsg("알 수 없는 isKeep 변수 값 사용. 재생성 취소. (dynamicIntArrayResize)", ERROR, 0);
 		return NULL;
 	}
 
-	size_t totalSize = (size_t)size * sizeof(int);
+	int *arrayData = NULL;
+	size_t totalSize = size * sizeof(int);
 
 	if(isKeep == YES)
 	{
-		array->data = (int*)reallocateMemory(array->data, totalSize);
-		if(checkObjectNull(array->data, "메모리 참조 실패, 재생성한 동적 배열이 NULL. (dynamicIntArrayResize)") == YES)
+		array->data = (int*)realloc(array->data, totalSize);
+		if(checkObjectNull(array->data, "메모리 참조 실패, 재할당한 동적 배열이 NULL. (dynamicIntArrayResize)") == YES)
 		{
 			return NULL;
 		}
 	}
 	else if(isKeep == NO)
 	{
-		int *arrayData = (int*)calloc(totalSize, 0);
-		if(checkObjectNull(arrayData, "메모리 참조 실패, 재생성한 동적 배열이 NULL. (dynamicIntArrayResize)") == YES)
+		arrayData = (int*)calloc(totalSize, 0);
+		if(checkObjectNull(arrayData, "메모리 참조 실패, 재할당한 동적 배열이 NULL. (dynamicIntArrayResize)") == YES)
 		{
-			return NULL;
+			
 		}
-		free(array->data);
-		array->data = arrayData;
+		free(&(array->data));
+	}
+	else
+	{
+		printMsg("알 수 없는 isKeep 변수 값 사용. 재할당 취소. (dynamicIntArrayResize)", ERROR, 0);
+		return NULL;
 	}
 
 	return array;
@@ -123,7 +123,7 @@ dynamicIntArray_t *dynamicIntArrayResize(dynamicIntArray_t *array, int size, int
 
 /**
  * @fn int dynamicIntArrayClear(dynamicIntArray_t *array)
- * @brief 동적 배열 관리 구조체의 동적 배열 관련 멤버 변수를 모두 0 으로 설정하는 함수
+ * @brief 동적 배열 관리 구조체의 멤버 변수를 모두 0 으로 설정하는 함수
  * @param array 동적 배열 관리 구조체 포인터(입력)
  * @return 성공 시 SUCCESS, 실패 시 FAIL 반환
  */
@@ -135,53 +135,66 @@ int dynamicIntArrayClear(dynamicIntArray_t *array)
 		return FAIL;
 	}
 
-	int size = array->size;
-	size_t totalSize = (size_t)size * sizeof(int);
-	memset(arrayData, 0, totalSize);
+	int size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayClear, array:%p)", DEBUG, 1, array);
+		return FAIL;
+	}
+
+	size_t totalSize = size * sizeof(int);
+	clearMemory(arrayData, totalSize);
 	array->size = 0;
 
 	return SUCCESS;
 }
 
 /**
- * @fn void dynamicIntArrayFinal(dynamicIntArray_t *array)
- * @brief 동적 배열 관리 구조체의 멤버 변수의 동적으로 생성된 메모리는 해제하고 정적 변수는 0 으로 설정하는 함수
+ * @fn int dynamicIntArrayFinal(dynamicIntArray_t *array)
+ * @brief 동적 배열 관리 구조체의 멤버 변수의 할당된 메모리를 해제하는 함수
  * @param array 동적 배열 관리 구조체 포인터(입력)
  * @return 성공 시 SUCCESS, 실패 시 FAIL 반환
  */
-void dynamicIntArrayFinal(dynamicIntArray_t *array)
+int dynamicIntArrayFinal(dynamicIntArray_t *array)
 {
-	if(checkObjectNull(array, "메모리 참조 실패, 동적 배열 관리 구조체가 NULL. (dynamicIntArrayFinal)") == YES)
+	int *arrayData = dynamicIntArrayGetArrayPtr(array);
+	if(checkObjectNull(arrayData, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArrayFinal)") == YES)
 	{
-		return;
+		return FAIL;
 	}
 
-	if(checkObjectNull(array->data, NULL) == NO)
+	freeMemory((void**)(&arrayData));
+
+	char *string = array->stringOfArray;
+	if(checkObjectNull(string, NULL) == NO)
 	{
-		free(array->data);
-		array->data = NULL;
+		freeMemory((void**)(&string));
 	}
 
-	if(checkObjectNull(array->stringOfArray, NULL) == NO)
-	{
-		free(array->stringOfArray);
-		array->stringOfArray = NULL;
-	}
-
-	array->size = 0;
+	return SUCCESS;
 }
 
 /**
- * @fn void dynamicIntArrayDelete(dynamicIntArray_t **array)
- * @brief 동적 배열 관리 구조체의 생성된 메모리를 해제하는 함수
+ * @fn int dynamicIntArrayDelete(dynamicIntArray_t **array)
+ * @brief 동적 배열 관리 구조체의 할당된 메모리를 해제하는 함수
  * @param array 동적 배열 관리 구조체 포인터 변수의 주소를 가지는 포인터(더블 포인터, 입력, 읽기 전용)
- * @return 반환값 없음
+ * @return 성공 시 SUCCESS, 실패 시 FAIL 반환
  */
-void dynamicIntArrayDelete(dynamicIntArray_t **array)
+int dynamicIntArrayDelete(dynamicIntArray_t **array)
 {
-	dynamicIntArrayFinal(*array);
-	free(*array);
-	*array = NULL;
+	if(dynamicIntArrayClear(*array) == FAIL)
+	{
+		return FAIL;
+	}
+
+	if(dynamicIntArrayFinal(*array) == FAIL)
+	{
+		return FAIL;
+	}
+
+	freeMemory((void**)(array));
+
+	return SUCCESS;
 }
 
 /**
@@ -248,20 +261,28 @@ int dynamicIntArrayGetElement(const dynamicIntArray_t *array, int index, int *is
  */
 dynamicIntArray_t *dynamicIntArrayAppend(dynamicIntArray_t *array, int datum)
 {
-	if(checkObjectNull(array, "메모리 재생성 실패, 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayAppend)") == YES)
+	if(dynamicIntArrayIncSize(array) == FAIL)
+	{
+		printMsg("dynamicIntArrayIncSize 실패. (dynamicIntArrayAppend, array:%p)", DEBUG, 1, array);
+		return NULL;
+	}
+
+	int size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayAppend, array:%p)", DEBUG, 1, array);
+		return NULL;
+	}
+
+	array = dynamicIntArrayResize(array, YES);
+	if(checkObjectNull(array->data, "메모리 재할당 실패, 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayAppend)") == YES)
 	{
 		return NULL;
 	}
 
-	array = dynamicIntArrayResize(array, ++(array->size), YES);
-	if(checkObjectNull(array, "메모리 재생성 실패, 동적 배열 관리 구조체가 NULL. (dynamicIntArrayAppend)") == YES)
+	if(dynamicIntArraySetElement(array, (size - 1), datum) == FAIL)
 	{
-		return NULL;
-	}
-
-	if(dynamicIntArraySetElement(array, (array->size - 1), datum) == FAIL)
-	{
-		printMsg("배열 저장 오류. dynamicIntArraySetElement 동작 실패. (dynamicIntArrayReverse)", DEBUG, 0);
+		printMsg("배열 저장 오류. dynamicIntArraySetElement 동작 실패. (dynamicIntArrayAppend)", DEBUG, 0);
 		return NULL;
 	}
 
@@ -284,29 +305,54 @@ dynamicIntArray_t *dynamicIntArrayInsertAt(dynamicIntArray_t *array, int index, 
 		return NULL;
 	}
 
-	int size = array->size;
-	int tempArraySize = size - index;
-	dynamicIntArray_t tempArray;
+	int size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayInsertAt, array:%p)", DEBUG, 1, array);
+		return NULL;
+	}
 
-	if(dynamicIntArrayInitialize(&tempArray, tempArraySize) == FAIL)
+	int tempArraySize = size - index;
+	dynamicIntArray_t tempArray[1];
+
+	if(dynamicIntArrayInitialize(tempArray, tempArraySize) == FAIL)
 	{
 		printMsg("동적 배열 관리 구조체 초기화 실패. (dynamicIntArrayInsertAt)", DEBUG, 0);
 		return NULL;
 	}
 
-	if (dynamicIntArrayCopy(&tempArray, 0, array, index, tempArraySize) == NULL)
+	if(dynamicIntArraySetSize(tempArray, tempArraySize) == FAIL)
+	{
+		printMsg("크기 지정 실패. (dynamicIntArrayNew, size:%d)", DEBUG, 1, tempArraySize);
+		return NULL;
+	}
+
+	if (dynamicIntArrayCopy(tempArray, 0, array, index, tempArraySize) == NULL)
 	{
 		printMsg("배열 복사 오류. dynamicIntArrayCopy 동작 실패. (dynamicIntArrayInsertAt, array -> tempArray)", DEBUG, 0);
 		return NULL;
 	}
 
-	array = dynamicIntArrayResize(array, ++(array->size), YES);
-	if(checkObjectNull(array, "메모리 재생성 실패, 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayInsertAt)") == YES)
+	if(dynamicIntArrayIncSize(array) == FAIL)
+	{
+		printMsg("dynamicIntArrayIncSize 실패. (dynamicIntArrayInsertAt, array:%p)", DEBUG, 1, array);
+		return NULL;
+	}
+
+	size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayAppend, array:%p)", DEBUG, 1, array);
+		return NULL;
+	}
+
+	array = dynamicIntArrayResize(array, YES);
+	if(checkObjectNull(array->data, "메모리 재할당 실패, 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayInsertAt)") == YES)
 	{
 		return NULL;
 	}
 
-	if (dynamicIntArrayCopy(array, (index + 1), &tempArray, 0, tempArraySize) == NULL)
+	if (dynamicIntArrayCopy(array, (index + 1), tempArray, 0, tempArraySize) == NULL)
 	{
 		printMsg("배열 복사 오류. dynamicIntArrayCopy 동작 실패. (dynamicIntArrayInsertAt, tempArray -> array)", DEBUG, 0);
 		return NULL;
@@ -314,12 +360,13 @@ dynamicIntArray_t *dynamicIntArrayInsertAt(dynamicIntArray_t *array, int index, 
 
 	if(dynamicIntArraySetElement(array, index, datum) == FAIL)
 	{
-		printMsg("배열 저장 오류. dynamicIntArraySetElement 동작 실패. (dynamicIntArrayReverse)", DEBUG, 0);
+		printMsg("배열 저장 오류. dynamicIntArraySetElement 동작 실패. (dynamicIntArrayInsertAt)", DEBUG, 0);
 		return NULL;
 	}
 
-	dynamicIntArrayFinal(&tempArray);
+	dynamicIntArrayFinal(tempArray);
 	return array;
+
 }
 
 /**
@@ -337,35 +384,60 @@ dynamicIntArray_t *dynamicIntArrayRemoveAt(dynamicIntArray_t *array, int index)
 		return NULL;
 	}
 
-	int size = array->size;
-	int tempArraySize = size - (index + 1);
-	dynamicIntArray_t tempArray;
+	int size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayRemoveAt, array:%p)", DEBUG, 1, array);
+		return NULL;
+	}
 
-	if(dynamicIntArrayInitialize(&tempArray, tempArraySize) == FAIL)
+	int tempArraySize = size - index;
+	dynamicIntArray_t tempArray[1];
+
+	if(dynamicIntArrayInitialize(tempArray, tempArraySize) == FAIL)
 	{
 		printMsg("동적 배열 관리 구조체 초기화 실패. (dynamicIntArrayRemoveAt)", DEBUG, 0);
 		return NULL;
 	}
 
-	if (dynamicIntArrayCopy(&tempArray, 0, array, (index + 1), tempArraySize) == NULL)
+	if(dynamicIntArraySetSize(tempArray, tempArraySize) == FAIL)
+	{
+		printMsg("크기 지정 실패. (dynamicIntArrayRemoveAt, size:%d)", DEBUG, 1, tempArraySize);
+		return NULL;
+	}
+
+	if (dynamicIntArrayCopy(tempArray, 0, array, (index + 1), tempArraySize) == NULL)
 	{
 		printMsg("배열 복사 오류. dynamicIntArrayCopy 동작 실패. (dynamicIntArrayRemoveAt, tempArray -> array)", DEBUG, 0);
 		return NULL;
 	}
 
-	if (dynamicIntArrayCopy(array, index, &tempArray, 0, tempArraySize) == NULL)
+	if (dynamicIntArrayCopy(array, index, tempArray, 0, tempArraySize) == NULL)
 	{
 		printMsg("배열 복사 오류. dynamicIntArrayCopy 동작 실패. (dynamicIntArrayRemoveAt, array -> tempArray)", DEBUG, 0);
 		return NULL;
 	}
 
-	array = dynamicIntArrayResize(array, --(array->size), YES);
-	if(checkObjectNull(array, "메모리 재생성 실패, 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayRemoveAt)") == YES)
+	if(dynamicIntArrayDecSize(array) == FAIL)
+	{
+		printMsg("dynamicIntArrayDecSize 실패. (dynamicIntArrayRemoveAt, array:%p)", DEBUG, 1, array);
+		return NULL;
+	}
+
+	size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayAppend, array:%p)", DEBUG, 1, array);
+		return NULL;
+	}
+
+	array = dynamicIntArrayResize(array, YES);
+	if(checkObjectNull(array->data, "메모리 재할당 실패, 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayRemoveAt)") == YES)
 	{
 		return NULL;
 	}
 
-	dynamicIntArrayFinal(&tempArray);
+	dynamicIntArrayFinal(tempArray);
 	return array;
 }
 
@@ -378,8 +450,14 @@ dynamicIntArray_t *dynamicIntArrayRemoveAt(dynamicIntArray_t *array, int index)
  */
 int dynamicIntArrayIndexOf(const dynamicIntArray_t *array, int datum)
 {
-	int size = array->size;
-	int targetIndex = UNKNOWN;
+	int size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayIndexOf, array:%p)", DEBUG, 1, array);
+		return FAIL;
+	}
+
+	int target_index = UNKNOWN;
 	int value = UNKNOWN;
 	int loopIndex = 0;
 	int isError[1] = { FAIL };
@@ -395,12 +473,12 @@ int dynamicIntArrayIndexOf(const dynamicIntArray_t *array, int datum)
 
 		if (value == datum)
 		{
-			targetIndex = loopIndex;
+			target_index = loopIndex;
 			break;
 		}
 	}
 
-	return targetIndex;
+	return target_index;
 }
 
 /**
@@ -412,8 +490,14 @@ int dynamicIntArrayIndexOf(const dynamicIntArray_t *array, int datum)
  */
 int dynamicIntArrayLastIndexOf(const dynamicIntArray_t *array, int datum)
 {
-	int size = array->size;
-	int targetIndex = UNKNOWN;
+	int size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (array:%p)", DEBUG, 1, array);
+		return FAIL;
+	}
+
+	int target_index = UNKNOWN;
 	int value = UNKNOWN;
 	int loopIndex = size - 1;
 	int isError[1] = { FAIL };
@@ -429,12 +513,12 @@ int dynamicIntArrayLastIndexOf(const dynamicIntArray_t *array, int datum)
 
 		if (value == datum)
 		{
-			targetIndex = loopIndex;
+			target_index = loopIndex;
 			break;
 		}
 	}
 
-	return targetIndex;
+	return target_index;
 }
 
 /**
@@ -446,8 +530,14 @@ int dynamicIntArrayLastIndexOf(const dynamicIntArray_t *array, int datum)
  */
 int dynamicIntArrayFind(const dynamicIntArray_t *array, compareInt1Param_f func)
 {
-	int size = array->size;
-	int targetIndex = UNKNOWN;
+	int size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayFind, array:%p)", DEBUG, 1, array);
+		return FAIL;
+	}
+
+	int target_index = UNKNOWN;
 	int value = UNKNOWN;
 	int loopIndex = 0;
 	int isError[1] = { FAIL };
@@ -463,12 +553,12 @@ int dynamicIntArrayFind(const dynamicIntArray_t *array, compareInt1Param_f func)
 
 		if (func(value) == YES)
 		{
-			targetIndex = loopIndex;
+			target_index = loopIndex;
 			break;
 		}
 	}
 
-	return targetIndex;
+	return target_index;
 }
 
 /**
@@ -479,7 +569,13 @@ int dynamicIntArrayFind(const dynamicIntArray_t *array, compareInt1Param_f func)
  */
 int dynamicIntArrayReverse(const dynamicIntArray_t *array)
 {
-	int size = array->size;
+	int size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayReverse, array:%p)", DEBUG, 1, array);
+		return FAIL;
+	}
+
 	dynamicIntArray_t *tempArray;
 	int loopIndex = 0;
 	int reverseLoopIndex = size - 1;
@@ -510,7 +606,10 @@ int dynamicIntArrayReverse(const dynamicIntArray_t *array)
 		reverseLoopIndex--;
 	}
 
-	dynamicIntArrayDelete(&tempArray);
+	if(dynamicIntArrayDelete(&tempArray) == FAIL)
+	{
+		printMsg("동적 배열 관리 구조체 메모리 해제 실패. (dynamicIntArrayDelete)", DEBUG, 0);
+	}
 	return SUCCESS;
 }
 
@@ -530,6 +629,12 @@ int dynamicIntArrayFill(const dynamicIntArray_t *array, int datum)
 	}
 
 	int size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayFill, array:%p)", DEBUG, 1, array);
+		return FAIL;
+	}
+
 	int loopIndex = 0;
 	for( ; loopIndex < size; loopIndex++)
 	{
@@ -572,6 +677,67 @@ int dynamicIntArrayGetSize(const dynamicIntArray_t *array)
 }
 
 /**
+ * @fn int static dynamicIntArraySetSize(dynamicIntArray_t *array, int size)
+ * @brief 동적 배열 관리 구조체가 관리하는 동적 배열의 전체 크기를 특정 값으로 저장하는 함수
+ * @param array 동적 배열 관리 구조체 포인터(입력)
+ * @param size 저장할 동적 배열의 전체 크기(입력)
+ * @return 성공 시 SUCCESS, 실패 시 FAIL 반환
+ */
+static int dynamicIntArraySetSize(dynamicIntArray_t *array, int size)
+{
+	if(checkObjectNull(array, "메모리 참조 실패, 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArraySetSize)") == YES)
+	{
+		return FAIL;
+	}
+
+	if(size <= 0)
+	{
+		printMsg("크기 지정 실패. 크기가 0 보다 작거나 같음. (dynamicIntArraySetSize, size:%d)", ERROR, 1, size);
+		return FAIL;
+	}
+
+	array->size = size;
+
+	return SUCCESS;
+}
+
+/**
+ * @fn static int dynamicIntArrayIncSize(dynamicIntArray_t *array)
+ * @brief 동적 배열 관리 구조체가 관리하는 동적 배열의 전체 크기를 1 증가시키는 함수
+ * @param array 동적 배열 관리 구조체 포인터(입력)
+ * @return 성공 시 SUCCESS, 실패 시 FAIL 반환
+ */
+static int dynamicIntArrayIncSize(dynamicIntArray_t *array)
+{
+	if(checkObjectNull(array, "메모리 참조 실패, 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayIncSize)") == YES)
+	{
+		return FAIL;
+	}
+
+	++(array->size);
+
+	return SUCCESS;
+}
+
+/**
+ * @fn static int dynamicIntArrayDecSize(dynamicIntArray_t *array)
+ * @brief 동적 배열 관리 구조체가 관리하는 동적 배열의 전체 크기를 1 감소시키는 함수
+ * @param array 동적 배열 관리 구조체 포인터(입력)
+ * @return 성공 시 SUCCESS, 실패 시 FAIL 반환
+ */
+static int dynamicIntArrayDecSize(dynamicIntArray_t *array)
+{
+	if(checkObjectNull(array, "메모리 참조 실패, 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayDecSize)") == YES)
+	{
+		return FAIL;
+	}
+
+	--(array->size);
+
+	return SUCCESS;
+}
+
+/**
  * @fn dynamicIntArray_t *dynamicIntArrayCopy(dynamicIntArray_t *dst, int dstIndex, dynamicIntArray_t *src, int srcIndex, int size)
  * @brief 하나의 동적 배열 관리 구조체의 동적 배열을 다른 동적 배열 관리 구조체의 동적 배열로 복사하는 함수
  * @param dst 복사될 동적 배열 관리 구조체 포인터(출력)
@@ -608,9 +774,9 @@ dynamicIntArray_t *dynamicIntArrayCopy(dynamicIntArray_t *dst, int dstIndex, con
 		return NULL;
 	}
 
-	if(size > (srcSize - srcIndex))
+	if(size > srcSize)
 	{
-		printMsg("복사하려는 크기가 배열의 크기보다 큼. (dynamicIntArrayCopy, size:%d, srcSize:%d, srcIndex:%d)", DEBUG, 2, size, srcSize, srcIndex);
+		printMsg("복사하려는 크기가 배열의 크기보다 큼. (dynamicIntArrayCopy, size:%d, srcSize:%d)", DEBUG, 2, size, srcSize);
 		return NULL;
 	}
 
@@ -621,9 +787,9 @@ dynamicIntArray_t *dynamicIntArrayCopy(dynamicIntArray_t *dst, int dstIndex, con
 		return NULL;
 	}
 
-	if(size > (dstSize - dstIndex))
+	if(size > dstSize)
 	{
-		printMsg("복사하려는 크기가 배열의 크기보다 큼. (dynamicIntArrayCopy, size:%d, dstSize:%d, dstIndex:%d)", DEBUG, 2, size, dstSize, dstIndex);
+		printMsg("복사하려는 크기가 배열의 크기보다 큼. (dynamicIntArrayCopy, size:%d, dstSize:%d)", DEBUG, 2, size, dstSize);
 		return NULL;
 	}
 
@@ -666,7 +832,7 @@ dynamicIntArray_t *dynamicIntArrayClone(const dynamicIntArray_t *original)
 	}
 
 	dynamicIntArray_t *new = dynamicIntArrayNew(size);
-	if(checkObjectNull(new, "메모리 생성 실패, 새 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayClone)") == YES)
+	if(checkObjectNull(new, "메모리 할당 실패, 새 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayClone)") == YES)
 	{
 		return NULL;
 	}
@@ -689,6 +855,12 @@ dynamicIntArray_t *dynamicIntArrayClone(const dynamicIntArray_t *original)
  */
 int dynamicIntArrayCheckBoundary(const dynamicIntArray_t *array, int index)
 {
+	int *arrayData = dynamicIntArrayGetArrayPtr(array);
+	if(checkObjectNull(arrayData, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArrayCheckBoundary)") == YES)
+	{
+		return FAIL;
+	}
+
 	int size = dynamicIntArrayGetSize(array);
 	if(size == UNKNOWN)
 	{
@@ -698,7 +870,7 @@ int dynamicIntArrayCheckBoundary(const dynamicIntArray_t *array, int index)
 
 	if ((index < 0) || (index >= size))
 	{
-		printMsg("동적 배열의 인덱스 바운더리 오류. (dynamicIntArrayCheckBoundary, index:%d, range:0~%d)", DEBUG, 2, index, size);
+		printMsg("동적 배열의 인덱스 바운더리 오류. (dynamicIntArrayCheckBoundary, array->data:%p, index:%d, range:0~%d)", DEBUG, 3, arrayData, index, size);
 		return FAIL;
 	}
 
@@ -719,7 +891,13 @@ char *dynamicIntArrayToString(dynamicIntArray_t *array)
 		return NULL;
 	}
 
-	int size = array->size;
+	int size = dynamicIntArrayGetSize(array);
+	if(size == UNKNOWN)
+	{
+		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayToString, array:%p)", DEBUG, 1, array);
+		return NULL;
+	}
+
 	int sumOfDigits = 0;
 	int loopIndex = 0;
 	int stringLength = 0;
@@ -732,40 +910,37 @@ char *dynamicIntArrayToString(dynamicIntArray_t *array)
 	}
 
 	// 생성할 문자열의 총 길이를 계산한다.
-	// [총 길이] = [모든 원소들의 자리수 합] + [동적 배열의 전체 크기(size) * 2] + 추가적인 버퍼 여유 공간
-	// [size * 2] : [쉼표 개수] + [공백 개수]
-	stringLength = sumOfDigits + (size * 2 + 3) + EXTRA_NBUF;
+	// [총 길이] = [모든 원소들의 자리수 합] + [동적 배열의 전체 크기(size) * 3]
+	// [size * 3] : [쉼표 개수] + [공백 개수] + [추가적인 여유 공간]
+	stringLength = sumOfDigits + (size * 3);
 
-	// 2. 동적 배열 관리 구조체 최초 생성 시 문자열이 생성되지 않으므로 
-	// 함수 최초 호출 시 생성하도록 한다.
+	// 2. 동적 배열 관리 구조체 최초 할당 시 문자열이 할당되지 않으므로 
+	// 함수 최초 호출 시 할당하도록 한다.
 	if(checkObjectNull(string, NULL) == YES)
 	{
-		string = (char*)calloc((size_t)stringLength, sizeof(char));
-		if(checkObjectNull(string, "메모리 참조 실패, 새로 생성된 문자열이 NULL. (dynamicIntArrayToString)") == YES)
+		string = (char*)malloc(stringLength);
+		if(checkObjectNull(string, "메모리 참조 실패, 새로 할당된 문자열이 NULL. (dynamicIntArrayToString)") == YES)
 		{
 			return NULL;
 		}
 	}
-	// 이전에 한 번 이상 호출되었다면, 내용을 모두 지우고 새로운 크기로 재생성한다.
+	// 이전에 한 번 이상 호출되었다면, 내용을 모두 지우고 새로운 크기로 재할당한다.
 	else
 	{
-		memset(string, 0, strlen(string));
-		string = (char*)reallocateMemory(string, (size_t)stringLength);
-		if(checkObjectNull(string, "메모리 참조 실패, 재생성된 문자열이 NULL. (dynamicIntArrayToString)") == YES)
+		clearMemory(string, strlen(string));
+		string = (char*)realloc(string, stringLength);
+		if(checkObjectNull(string, "메모리 참조 실패, 재할당된 문자열이 NULL. (dynamicIntArrayToString)") == YES)
 		{
 			return NULL;
 		}
 	}
 
-	// 3. 생성된 문자열에 동적 배열에 저장된 값을 하나씩 문자열로 변환해서 추가한다.
+	// 3. 할당된 문자열에 동적 배열에 저장된 값을 하나씩 문자열로 변환해서 추가한다.
 	loopIndex = 0;
 	string[loopIndex] = '{';
 	for (; loopIndex < size; loopIndex++)
 	{
-		if(addNumberToString(string, arrayData[loopIndex]) == FAIL)
-		{
-			return NULL;
-		}
+		addNumberToString(string, arrayData[loopIndex]);
 		if ((loopIndex + 1) < size) strcat(string, ",");
 	}
 	strcat(string, " }");
@@ -773,6 +948,7 @@ char *dynamicIntArrayToString(dynamicIntArray_t *array)
 	// 4. 문자열의 쓰레기값 출력 방지하기 위해 문자열의 맨 끝에 널 문자 추가한다.
 	string[strlen(string)] = '\0';
 
+	// 5. 사용된 주소값을 다시 구조체의 문자열 포인터 변수에 저장한다.
 	array->stringOfArray = string;
 	return string;
 }
@@ -791,20 +967,20 @@ char *dynamicIntArrayToString(dynamicIntArray_t *array)
  */
 void printMsg(const char *msg, int type, int argc, ...)
 {
-	if(checkObjectNull(msg, "메모리 참조 실패, 메시지 문자열이 NULL. (printMsg)") == YES)
+	if(checkObjectNull(msg, "메모리 참조 실패, 메시지 문자열이 NULL. (pringMsg)") == YES)
 	{
 		return;
 	}
 
 	if((type < UNKNOWN) && (type > YES))
 	{
-		printf("출력 실패. 알 수 없는 메시지 타입. (printMsg)\n");
+		printf("알 수 없는 메시지 타입.\n");
 		return;
 	}
 
 	if(argc < 0)
 	{
-		printf("출력 실패. 출력문 매개변수 개수가 음수. (printMsg)\n");
+		printf("출력문 매개변수 개수가 음수.\n");
 		return;
 	}
 
@@ -819,14 +995,14 @@ void printMsg(const char *msg, int type, int argc, ...)
 	}
 
 	char printBuffer[size];
-	memset(printBuffer, 0, (size_t)size);
+	clearMemory(printBuffer, size);
 
-	int isErrorForVSN = vsnprintf(printBuffer, (size_t)size, msg, argPointer);
+	int isErrorForVSN = vsnprintf(printBuffer, size, msg, argPointer);
 	if(isErrorForVSN <= 0 // for glibc < 2.1
-			|| (size_t)isErrorForVSN >= sizeof(printBuffer)) // for glibc >= 2.1
+			|| isErrorForVSN >= sizeof(printBuffer)) // for glibc >= 2.1
 	{
 #if IS_PRINT_DEBUG
-		printf("출력 실패. vsnprintf 함수 동작 오류. (printMsg, returnValue:%d)\n", isErrorForVSN);
+		printf("출력 실패. vsnprintf 함수 동작 오류. (printMsg)\n");
 #endif
 		return;
 	}
@@ -873,39 +1049,6 @@ int checkObjectNull(const void *object, const char *msg)
 ///////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * @fn static void *reallocateMemory(void *memory, size_t size)
- * @brief 메모리를 재할당하는 함수
- * @param memory 재할당할 주소를 저장할 포인터(입력)
- * @param size 재할당할 크기(입력)
- * @return 재할당된 주소를 가지는 포인터
- */
-static void *reallocateMemory(void *memory, size_t size)
-{
-	if(checkObjectNull(memory, "메모리 참조 실패, 재할당될 메모리의 포인터가 NULL. (reallocateMemory)") == YES)
-	{
-		printMsg("memory:%p", DEBUG, 1, memory);
-		return NULL;
-	}
-
-	if(size <= 0)
-	{
-		printMsg("크기 지정 실패. 크기가 0 보다 작거나 같음. (reallocateMemory, size:%d)", ERROR, 1, size);
-		return NULL;
-	}
-
-	void *tempMemory = memory;
-	memory = realloc(memory, size);
-
-	if(checkObjectNull(memory, "메모리 참조 실패, 재할당된 메모리의 포인터가 NULL. (reallocateMemory)") == YES)
-	{
-		printMsg("memory:%p, tempwMemory:%p", DEBUG, 2, memory, tempMemory);
-		memory = tempMemory;
-	}
-
-	return memory;
-}
-
-/**
  * @fn static int getBufferSize(const char *format, ...)
  * @brief 가변 인자가 포함된 문자열의 총 길이를 계산하여 반환하는 함수
  * @param msg 가변 인자가 포함된 문자열(입력, 읽기 전용) 
@@ -931,48 +1074,33 @@ static int getBufferSize(const char *msg, ...)
  * @fn static int getDigitOfNumber(int number)
  * @brief 정수의 자리수를 계산해서 반환하는 함수
  * @param number 자리수를 계산할 정수(입력)
- * @return 성공 시 숫자의 자리수, 실패 시 FAIL 반환
+ * @return 항상 정수의 자리수 반환
  */
 static int getDigitOfNumber(int number)
 {
 	int countOfDigit = 0;
+
 	while(number != 0)
 	{
 		countOfDigit++;
 		number /= 10;
 	}
-	return countOfDigit;
 
-//	char buf[16] = { '\0' };
-//	if (sprintf(buf, "%d", number) < 0)
-//	{
-//		return FAIL;
-//	}
-//	return strlen(buf);
+	return countOfDigit;
 }
 
 /**
- * @fn static int addNumberToString(char *string, int number)
+ * @fn static void addNumberToString(char *string, int number)
  * @brief 정수를 문자열로 변환해서 전달받은 문자열에 추가하는 함수
  * @param string 추가될 문자열(출력)
  * @param number 추가할 정수(입력)
- * @return 성공 시 SUCCESS, 실패 시 FAIL 반환
+ * @return 반환값 없음
  */
-static int addNumberToString(char *string, int number)
+static void addNumberToString(char *string, int number)
 {
-	if(checkObjectNull(string, "메모리 참조 실패, 추가될 문자열이 NULL. (addNumberToString)") == YES)
-	{
-		return FAIL;
-	}
-
 	int digitOfNumber = getDigitOfNumber(number);
 	char buf[digitOfNumber + 1];
-	if(sprintf(buf, " %d", number) < 0)
-	{
-		return FAIL;
-	}
+	sprintf(buf, " %d", number);
 	strcat(string, buf);
-
-	return SUCCESS;
 }
 

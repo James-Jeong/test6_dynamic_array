@@ -14,6 +14,8 @@
 #define IS_PRINT_DEBUG	1
 // 프로그램 에러 출력 여부 매크로 상수
 #define IS_PRINT_ERROR	1
+// 추가적인 버퍼 여유 공간
+#define EXTRA_NBUF		10
 
 // 프로그램 출력 열거형
 enum PRINT_TYPE
@@ -26,11 +28,11 @@ enum PRINT_TYPE
 // 프로그램 상태 열거형
 enum STATUS
 {
-	UNKNOWN		= -2,	// 알 수 없는 상태
+	UNKNOWN	= -2,	// 알 수 없는 상태
 	NO		= -1,	// 아니오
-	FAIL		= -1,	// 실패
-	NONE		= 0,	// 존재하지 않음
-	SUCCESS		= 1,	// 성공
+	FAIL	= -1,	// 실패
+	NONE	= 0,	// 존재하지 않음
+	SUCCESS	= 1,	// 성공
 	YES		= 1	// 예
 };
 
@@ -55,10 +57,10 @@ struct dynamicIntArray_s
 
 dynamicIntArray_t *dynamicIntArrayNew(int size);
 int dynamicIntArrayInitialize(dynamicIntArray_t *array, int size);
-dynamicIntArray_t *dynamicIntArrayResize(dynamicIntArray_t *array, int isKeep);
+dynamicIntArray_t *dynamicIntArrayResize(dynamicIntArray_t *array, int size, int isKeep);
 int dynamicIntArrayClear(dynamicIntArray_t *array);
-int dynamicIntArrayFinal(dynamicIntArray_t *array);
-int dynamicIntArrayDelete(dynamicIntArray_t **array);
+void dynamicIntArrayFinal(dynamicIntArray_t *array);
+void dynamicIntArrayDelete(dynamicIntArray_t **array);
 
 int dynamicIntArraySetElement(const dynamicIntArray_t *array, int index, int datum);
 int dynamicIntArrayGetElement(const dynamicIntArray_t *array, int index, int *isError);
@@ -81,9 +83,6 @@ int dynamicIntArrayCheckBoundary(const dynamicIntArray_t *array, int index);
 char *dynamicIntArrayToString(dynamicIntArray_t *array);
 
 int dynamicIntArrayGetSize(const dynamicIntArray_t *array);
-int dynamicIntArraySetSize(dynamicIntArray_t *array, int size);
-int dynamicIntArrayIncSize(dynamicIntArray_t *array);
-int dynamicIntArrayDecSize(dynamicIntArray_t *array);
 
 ///////////////////////////////////////////////////////////////////////////////////////
 /// Common Util Functions
