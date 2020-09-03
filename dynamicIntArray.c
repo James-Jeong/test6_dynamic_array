@@ -859,7 +859,7 @@ void printMsg(const char *msg, int type, int argc, ...)
 	{
 #if IS_PRINT_DEBUG
 		printf("[DEBUG] 출력 실패. vsnprintf 함수 동작 오류.\n");
-		printf("(printMsg, returnValue:[%d], printBuffer:[%s(%ld)], size:[%d], msg:[%s], argc:[%d], type:[%d])\n", isErrorForVSN, printBuffer, sizeof(printBuffer), size, msg, argc, type);
+		printf("(printMsg, returnValue:[%d], printBuffer:[%s], size:[%d], msg:[%s], argc:[%d], type:[%d])\n", isErrorForVSN, printBuffer, size, msg, argc, type);
 #endif
 		return;
 	}
