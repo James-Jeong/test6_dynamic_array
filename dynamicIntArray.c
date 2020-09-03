@@ -707,6 +707,7 @@ dynamicIntArray_t *dynamicIntArrayClone(const dynamicIntArray_t *original)
 		new->stringOfArray = (char*)calloc(arrayLength, sizeof(char));
 		if(checkObjectNull(new->stringOfArray, "메모리 생성 실패, 새로 생성된 문자열이 NULL. (dynamicIntArrayClone)") == YES)
 		{
+			dynamicIntArrayDelete(&new);
 			return NULL;
 		}
 		strncpy(new->stringOfArray, original->stringOfArray, arrayLength);
