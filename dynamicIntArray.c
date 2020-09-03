@@ -22,11 +22,6 @@ static int addNumberToString(char *string, int number);
 dynamicIntArray_t *dynamicIntArrayNew(int size)
 {
 	dynamicIntArray_t *array = (dynamicIntArray_t*)malloc(sizeof(dynamicIntArray_t));
-	if(checkObjectNull(array, "메모리 참조 실패, 생성된 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayNew)") == YES)
-	{
-		return NULL;
-	}
-
 	if(dynamicIntArrayInitialize(array, size) == FAIL)
 	{
 		printMsg("초기화 실패, 생성된 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayNew)", DEBUG, 0);
@@ -93,7 +88,7 @@ dynamicIntArray_t *dynamicIntArrayResize(dynamicIntArray_t *array, int size, int
 
 	if((isKeep != YES) && (isKeep != NO))
 	{
-		printMsg("알 수 없는 isKeep 변수 값 사용. 재생성 취소. (dynamicIntArrayResize)", ERROR, 0);
+		printMsg("알 수 없는 isKeep 변수 값 사용. 재생성 취소. (dynamicIntArrayResize, isKeep:%d)", ERROR, 1, isKeep);
 		return NULL;
 	}
 
@@ -264,14 +259,10 @@ int dynamicIntArrayGetElement(const dynamicIntArray_t *array, int index, int *is
  */
 dynamicIntArray_t *dynamicIntArrayAppend(dynamicIntArray_t *array, int datum)
 {
-	if(checkObjectNull(array, "메모리 재생성 실패, 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayAppend)") == YES)
-	{
-		return NULL;
-	}
-
 	array = dynamicIntArrayResize(array, ++(array->size), YES);
 	if(checkObjectNull(array, "메모리 재생성 실패, 동적 배열 관리 구조체가 NULL. (dynamicIntArrayAppend)") == YES)
 	{
+		--(array->size);
 		return NULL;
 	}
 
@@ -319,6 +310,7 @@ dynamicIntArray_t *dynamicIntArrayInsertAt(dynamicIntArray_t *array, int index, 
 	array = dynamicIntArrayResize(array, ++(array->size), YES);
 	if(checkObjectNull(array, "메모리 재생성 실패, 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayInsertAt)") == YES)
 	{
+		--(array->size);
 		return NULL;
 	}
 
@@ -384,6 +376,7 @@ dynamicIntArray_t *dynamicIntArrayRemoveAt(dynamicIntArray_t *array, int index)
 	array = dynamicIntArrayResize(array, --(array->size), YES);
 	if(checkObjectNull(array, "메모리 재생성 실패, 동적 배열 관리 구조체 포인터가 NULL. (dynamicIntArrayRemoveAt)") == YES)
 	{
+		++(array->size);
 		return NULL;
 	}
 
@@ -703,7 +696,7 @@ dynamicIntArray_t *dynamicIntArrayClone(const dynamicIntArray_t *original)
 
 	if (dynamicIntArrayCopy(new, 0, original, 0, size) == FAIL)
 	{
-		printMsg("구조체 복제 실패. (dynamicIntArrayClone, new:%p, original:%p, size:%d)", DEBUG, 3, new, original, size);
+		printMsg("동적 배열 관리 구조체 복사 실패. (dynamicIntArrayClone, new:%p, original:%p, size:%d)", DEBUG, 3, new, original, size);
 		dynamicIntArrayDelete(&new);
 		return NULL;
 	}
