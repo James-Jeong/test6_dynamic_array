@@ -109,8 +109,8 @@ dynamicIntArray_t *dynamicIntArrayResize(dynamicIntArray_t *array, int size, int
 	}
 	else if(isKeep == NO)
 	{
-		int *arrayData = (int*)calloc(totalSize, 0);
-		if(checkObjectNull(arrayData, "메모리 참조 실패, 재생성한 동적 배열이 NULL. (dynamicIntArrayResize)") == YES)
+		int *arrayData = (int*)calloc(totalSize, sizeof(int));
+		if(checkObjectNull(arrayData, "메모리 참조 실패, 새로 생성한 동적 배열이 NULL. (dynamicIntArrayResize)") == YES)
 		{
 			return NULL;
 		}
@@ -123,7 +123,7 @@ dynamicIntArray_t *dynamicIntArrayResize(dynamicIntArray_t *array, int size, int
 
 /**
  * @fn int dynamicIntArrayClear(dynamicIntArray_t *array)
- * @brief 동적 배열 관리 구조체의 동적 배열 관련 멤버 변수를 모두 0 으로 설정하는 함수
+ * @brief 동적 배열 관리 구조체의 동적 배열 관련 멤버 변수들을 모두 0 으로 설정하는 함수
  * @param array 동적 배열 관리 구조체 포인터(입력)
  * @return 성공 시 SUCCESS, 실패 시 FAIL 반환
  */
@@ -480,11 +480,11 @@ int dynamicIntArrayFind(const dynamicIntArray_t *array, compareInt1Param_f func)
 int dynamicIntArrayReverse(const dynamicIntArray_t *array)
 {
 	int size = array->size;
-	dynamicIntArray_t *tempArray;
 	int loopIndex = 0;
 	int reverseLoopIndex = size - 1;
 	int tempArrayValue = UNKNOWN;
 	int isError[1] = { FAIL };
+	dynamicIntArray_t *tempArray;
 
 	if ((tempArray = dynamicIntArrayClone(array)) == NULL)
 	{
@@ -529,7 +529,7 @@ int dynamicIntArrayFill(const dynamicIntArray_t *array, int datum)
 		return FAIL;
 	}
 
-	int size = dynamicIntArrayGetSize(array);
+	int size = array->size;
 	int loopIndex = 0;
 	for( ; loopIndex < size; loopIndex++)
 	{
@@ -610,7 +610,7 @@ dynamicIntArray_t *dynamicIntArrayCopy(dynamicIntArray_t *dst, int dstIndex, con
 
 	if(size > (srcSize - srcIndex))
 	{
-		printMsg("복사하려는 크기가 배열의 크기보다 큼. (dynamicIntArrayCopy, size:%d, srcSize:%d, srcIndex:%d)", DEBUG, 2, size, srcSize, srcIndex);
+		printMsg("복사하려는 크기가 지정한 인덱스부터 배열의 마지막까지의 크기보다 큼. (dynamicIntArrayCopy, size:%d, srcSize:%d, srcIndex:%d)", DEBUG, 3, size, srcSize, srcIndex);
 		return NULL;
 	}
 
@@ -623,7 +623,7 @@ dynamicIntArray_t *dynamicIntArrayCopy(dynamicIntArray_t *dst, int dstIndex, con
 
 	if(size > (dstSize - dstIndex))
 	{
-		printMsg("복사하려는 크기가 배열의 크기보다 큼. (dynamicIntArrayCopy, size:%d, dstSize:%d, dstIndex:%d)", DEBUG, 2, size, dstSize, dstIndex);
+		printMsg("복사하려는 크기가 지정한 인덱스부터 배열의 마지막까지의 크기보다 큼. (dynamicIntArrayCopy, size:%d, dstSize:%d, dstIndex:%d)", DEBUG, 3, size, dstSize, dstIndex);
 		return NULL;
 	}
 
@@ -673,7 +673,8 @@ dynamicIntArray_t *dynamicIntArrayClone(const dynamicIntArray_t *original)
 
 	if (dynamicIntArrayCopy(new, 0, original, 0, size) == NULL)
 	{
-		printMsg("구조체 복제 실패. (dynamicIntArrayClone)", DEBUG, 0);
+		printMsg("구조체 복제 실패. (dynamicIntArrayClone, new:%p, original:%p, size:%d)", DEBUG, 3, new, original, size);
+		dynamicIntArrayDelete(&new);
 		return NULL;
 	}
 
@@ -732,9 +733,10 @@ char *dynamicIntArrayToString(dynamicIntArray_t *array)
 	}
 
 	// 생성할 문자열의 총 길이를 계산한다.
-	// [총 길이] = [모든 원소들의 자리수 합] + [동적 배열의 전체 크기(size) * 2] + 추가적인 버퍼 여유 공간
-	// [size * 2] : [쉼표 개수] + [공백 개수]
-	stringLength = sumOfDigits + (size * 2 + 3) + EXTRA_NBUF;
+	// [총 길이] = [모든 원소들의 자리수 합] + [동적 배열의 전체 크기(size) * 2 + 3]
+	// [size * 2 + 2] : [쉼표 개수(size 보다 1개 적다. size - 1)] + [공백 개수(size 만큼 있고 앞에 하나 더 있다. size + 1)] + [중괄호 개수(2)] + [널 문자(1)]
+	stringLength = sumOfDigits + (size * 2 + 3);
+	printMsg("sumOfDigits : %d, length : %d", NORMAL, 2, sumOfDigits, stringLength);
 
 	// 2. 동적 배열 관리 구조체 최초 생성 시 문자열이 생성되지 않으므로 
 	// 함수 최초 호출 시 생성하도록 한다.
@@ -769,9 +771,6 @@ char *dynamicIntArrayToString(dynamicIntArray_t *array)
 		if ((loopIndex + 1) < size) strcat(string, ",");
 	}
 	strcat(string, " }");
-
-	// 4. 문자열의 쓰레기값 출력 방지하기 위해 문자열의 맨 끝에 널 문자 추가한다.
-	string[strlen(string)] = '\0';
 
 	array->stringOfArray = string;
 	return string;
@@ -930,12 +929,17 @@ static int getBufferSize(const char *msg, ...)
 /**
  * @fn static int getDigitOfNumber(int number)
  * @brief 정수의 자리수를 계산해서 반환하는 함수
+ * 음수이면 '-' 부호도 자리수에 포함한다.
  * @param number 자리수를 계산할 정수(입력)
  * @return 성공 시 숫자의 자리수, 실패 시 FAIL 반환
  */
 static int getDigitOfNumber(int number)
 {
 	int countOfDigit = 0;
+
+	if(number < 0) countOfDigit++;
+	else if(number == 0) return 1;
+
 	while(number != 0)
 	{
 		countOfDigit++;
