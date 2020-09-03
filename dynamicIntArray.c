@@ -87,7 +87,7 @@ dynamicIntArray_t *dynamicIntArrayResize(dynamicIntArray_t *array, int size, int
 
 	if(size <= 0)
 	{
-		printMsg("크기 지정 실패. 크기가 0 보다 작거나 같음. (dynamicIntArrayResize, size:%d)", ERROR, 1, size);
+		printMsg("동적 배열의 크기가 0 보다 작거나 같음. (dynamicIntArrayResize, size:%d)", ERROR, 1, size);
 		return NULL;
 	}
 
@@ -136,24 +136,35 @@ int dynamicIntArrayClear(dynamicIntArray_t *array)
 	}
 
 	int size = array->size;
+	if(size <= 0)
+	{
+		printMsg("동적 배열의 크기가 0 보다 작거나 같음. (dynamicIntArrayClear, size:%d)", DEBUG, 1, size);
+		return FAIL;
+	}
+
 	size_t totalSize = (size_t)size * sizeof(int);
 	memset(arrayData, 0, totalSize);
 	array->size = 0;
+
+	if(checkObjectNull(array->stringOfArray, NULL) == NO)
+	{
+		memset(array->stringOfArray, 0, strlen(array->stringOfArray));
+	}
 
 	return SUCCESS;
 }
 
 /**
- * @fn void dynamicIntArrayFinal(dynamicIntArray_t *array)
+ * @fn int dynamicIntArrayFinal(dynamicIntArray_t *array)
  * @brief 동적 배열 관리 구조체의 멤버 변수의 동적으로 생성된 메모리는 해제하고 정적 변수는 0 으로 설정하는 함수
  * @param array 동적 배열 관리 구조체 포인터(입력)
  * @return 성공 시 SUCCESS, 실패 시 FAIL 반환
  */
-void dynamicIntArrayFinal(dynamicIntArray_t *array)
+int dynamicIntArrayFinal(dynamicIntArray_t *array)
 {
 	if(checkObjectNull(array, "메모리 참조 실패, 동적 배열 관리 구조체가 NULL. (dynamicIntArrayFinal)") == YES)
 	{
-		return;
+		return FAIL;
 	}
 
 	if(checkObjectNull(array->data, NULL) == NO)
@@ -169,6 +180,8 @@ void dynamicIntArrayFinal(dynamicIntArray_t *array)
 	}
 
 	array->size = 0;
+
+	return SUCCESS;
 }
 
 /**
@@ -179,7 +192,12 @@ void dynamicIntArrayFinal(dynamicIntArray_t *array)
  */
 void dynamicIntArrayDelete(dynamicIntArray_t **array)
 {
-	dynamicIntArrayFinal(*array);
+	if(dynamicIntArrayFinal(*array) == FAIL)
+	{
+		printMsg("동적 배열 관리 구조체 메모리 해제 실패. dynamicIntArrayFinal 실패. (dynamicIntArrayDelete, array:%p)", DEBUG, 1, *array);
+		return;
+	}
+
 	free(*array);
 	*array = NULL;
 }
@@ -316,7 +334,12 @@ dynamicIntArray_t *dynamicIntArrayInsertAt(dynamicIntArray_t *array, int index, 
 		return NULL;
 	}
 
-	dynamicIntArrayFinal(&tempArray);
+	if(dynamicIntArrayFinal(&tempArray) == FAIL)
+	{
+		printMsg("tempArray 내부 동적 배열 메모리 해제 실패. dynamicIntArrayFinal 실패. (dynamicIntArrayInsertAt)", DEBUG, 0);
+		return NULL;
+	}
+
 	return array;
 }
 
@@ -364,7 +387,12 @@ dynamicIntArray_t *dynamicIntArrayRemoveAt(dynamicIntArray_t *array, int index)
 		return NULL;
 	}
 
-	dynamicIntArrayFinal(&tempArray);
+	if(dynamicIntArrayFinal(&tempArray) == FAIL)
+	{
+		printMsg("tempArray 내부 동적 배열 메모리 해제 실패. dynamicIntArrayFinal 실패. (dynamicIntArrayRemoveAt)", DEBUG, 0);
+		return NULL;
+	}
+
 	return array;
 }
 

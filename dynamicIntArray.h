@@ -57,7 +57,7 @@ dynamicIntArray_t *dynamicIntArrayNew(int size);
 int dynamicIntArrayInitialize(dynamicIntArray_t *array, int size);
 dynamicIntArray_t *dynamicIntArrayResize(dynamicIntArray_t *array, int size, int isKeep);
 int dynamicIntArrayClear(dynamicIntArray_t *array);
-void dynamicIntArrayFinal(dynamicIntArray_t *array);
+int dynamicIntArrayFinal(dynamicIntArray_t *array);
 void dynamicIntArrayDelete(dynamicIntArray_t **array);
 
 int dynamicIntArraySetElement(const dynamicIntArray_t *array, int index, int datum);
