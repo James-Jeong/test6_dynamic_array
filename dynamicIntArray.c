@@ -701,6 +701,17 @@ dynamicIntArray_t *dynamicIntArrayClone(const dynamicIntArray_t *original)
 		return NULL;
 	}
 
+	if(checkObjectNull(original->stringOfArray, NULL) == NO)
+	{
+		size_t arrayLength = strlen(original->stringOfArray);
+		new->stringOfArray = (char*)calloc(arrayLength, sizeof(char));
+		if(checkObjectNull(new->stringOfArray, "메모리 생성 실패, 새로 생성된 문자열이 NULL. (dynamicIntArrayClone)") == YES)
+		{
+			return NULL;
+		}
+		strncpy(new->stringOfArray, original->stringOfArray, arrayLength);
+	}
+
 	return new;
 }
 
@@ -819,13 +830,13 @@ void printMsg(const char *msg, int type, int argc, ...)
 
 	if((type < UNKNOWN) && (type > YES))
 	{
-		printf("출력 실패. 알 수 없는 메시지 타입. (printMsg)\n");
+		printf("[DEBUG] 출력 실패. 알 수 없는 메시지 타입. (printMsg, type:%d)\n", type);
 		return;
 	}
 
 	if(argc < 0)
 	{
-		printf("출력 실패. 출력문 매개변수 개수가 음수. (printMsg)\n");
+		printf("[DEBUG] 출력 실패. 출력문 매개변수 개수가 음수. (printMsg, argc:%d)\n", argc);
 		return;
 	}
 
@@ -835,19 +846,20 @@ void printMsg(const char *msg, int type, int argc, ...)
 	int size = getBufferSize(msg, argPointer);
 	if(size == FAIL)
 	{
-		printf("가변 인자를 포함한 문자열의 길이 계산 실패. (printMsg)\n");
+		printf("[ERROR] 가변 인자를 포함한 문자열의 길이 계산 실패. (printMsg)\n");
 		return;
 	}
 
 	char printBuffer[size];
-	memset(printBuffer, 0, (size_t)size);
+	memset(printBuffer, 0, sizeof(printBuffer));
 
 	int isErrorForVSN = vsnprintf(printBuffer, sizeof(printBuffer), msg, argPointer);
 	if(isErrorForVSN < 0 // for glibc < 2.1
 			|| (size_t)isErrorForVSN >= sizeof(printBuffer)) // for glibc >= 2.1
 	{
 #if IS_PRINT_DEBUG
-		printf("출력 실패. vsnprintf 함수 동작 오류. (printMsg, returnValue:%d)\n", isErrorForVSN);
+		printf("[DEBUG] 출력 실패. vsnprintf 함수 동작 오류.\n");
+		printf("(printMsg, returnValue:[%d], printBuffer:[%s(%ld)], size:[%d], msg:[%s], argc:[%d], type:[%d])\n", isErrorForVSN, printBuffer, sizeof(printBuffer), size, msg, argc, type);
 #endif
 		return;
 	}
@@ -859,13 +871,13 @@ void printMsg(const char *msg, int type, int argc, ...)
 #if IS_PRINT_DEBUG
 	else if (type == DEBUG)
 	{
-		printf("%s\n", printBuffer);
+		printf("[DEBUG] %s\n", printBuffer);
 	}
 #endif
 #if IS_PRINT_ERROR
 	else if (type == ERROR)
 	{
-		printf("%s\n", printBuffer);
+		printf("[ERROR] %s\n", printBuffer);
 	}
 #endif
 
@@ -895,14 +907,14 @@ int checkObjectNull(const void *object, const char *msg)
 
 /**
  * @fn static void *reallocateMemory(void *memory, size_t size)
- * @brief 메모리를 재할당하는 함수
- * @param memory 재할당할 주소를 저장할 포인터(입력)
- * @param size 재할당할 크기(입력)
- * @return 재할당된 주소를 가지는 포인터
+ * @brief 메모리를 재생성하는 함수
+ * @param memory 재생성할 주소를 저장할 포인터(입력)
+ * @param size 재생성할 크기(입력)
+ * @return 재생성된 주소를 가지는 포인터
  */
 static void *reallocateMemory(void *memory, size_t size)
 {
-	if(checkObjectNull(memory, "메모리 참조 실패, 재할당될 메모리의 포인터가 NULL. (reallocateMemory)") == YES)
+	if(checkObjectNull(memory, "메모리 참조 실패, 재생성될 메모리의 포인터가 NULL. (reallocateMemory)") == YES)
 	{
 		printMsg("memory:%p", DEBUG, 1, memory);
 		return NULL;
@@ -917,7 +929,7 @@ static void *reallocateMemory(void *memory, size_t size)
 	void *tempMemory = memory;
 	memory = realloc(memory, size);
 
-	if(checkObjectNull(memory, "메모리 참조 실패, 재할당된 메모리의 포인터가 NULL. (reallocateMemory)") == YES)
+	if(checkObjectNull(memory, "메모리 참조 실패, 재생성된 메모리의 포인터가 NULL. (reallocateMemory)") == YES)
 	{
 		printMsg("memory:%p, tempwMemory:%p", DEBUG, 2, memory, tempMemory);
 		memory = tempMemory;

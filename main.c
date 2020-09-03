@@ -173,7 +173,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	printMsg("저장된 문자열 : %s", NORMAL, 1, array2->stringOfArray);
+	printMsg(array2->stringOfArray, NORMAL, 0);
 	printMsg(dynamicIntArrayToString(array2), NORMAL, 0);
 
 	printMsg("[CLEAR TEST]", NORMAL, 0);
@@ -184,7 +184,7 @@ int main(int argc, char **argv)
 		//return FAIL;
 	}
 
-	printMsg("저장된 문자열 : %s", NORMAL, 1, array2->stringOfArray);
+	printMsg(array2->stringOfArray, NORMAL, 0);
 	printMsg(dynamicIntArrayToString(array2), NORMAL, 0);
 
 	dynamicIntArrayDelete(&array2);
