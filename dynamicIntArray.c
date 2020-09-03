@@ -200,13 +200,12 @@ int dynamicIntArraySetElement(const dynamicIntArray_t *array, int index, int dat
 		return FAIL;
 	}
 
-	int *arrayData = dynamicIntArrayGetArrayPtr(array);
-	if(checkObjectNull(arrayData, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArraySetElement)") == YES)
+	if(checkObjectNull(array->data, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArrayGetElement)") == YES)
 	{
 		return FAIL;
 	}
 
-	arrayData[index] = datum;
+	array->data[index] = datum;
 
 	return SUCCESS;
 }
@@ -216,8 +215,8 @@ int dynamicIntArraySetElement(const dynamicIntArray_t *array, int index, int dat
  * @brief 동적 배열 관리 구조체가 관리하는 동적 배열의 지정한 인덱스에 저장된 값을 반환하는 함수
  * @param array 동적 배열 관리 구조체 포인터(입력, 읽기 전용)
  * @param index 지정할 인덱스(입력)
- * @param isError 함수 실행 결과(출력)
- * @return 성공 시 지정한 인덱스에 저장된 값, 실패 시 FAIL 반환
+ * @param isError 함수 실행 결과(출력, 함수 실행 성공 시 SUCCESS, 실패 시 FAIL 저장)
+ * @return 성공 시 지정한 인덱스에 저장된 값, 실패 시 NONE 반환
  */
 int dynamicIntArrayGetElement(const dynamicIntArray_t *array, int index, int *isError)
 {
@@ -227,16 +226,15 @@ int dynamicIntArrayGetElement(const dynamicIntArray_t *array, int index, int *is
 		*isError = FAIL;
 		return NONE;
 	}
-
-	int *arrayData = dynamicIntArrayGetArrayPtr(array);
-	if(checkObjectNull(arrayData, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArrayGetElement)") == YES)
+	
+	if(checkObjectNull(array->data, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArrayGetElement)") == YES)
 	{
 		*isError = FAIL;
 		return NONE;
 	}
 
 	*isError = SUCCESS;
-	return arrayData[index];
+	return array->data[index];
 }
 
 /**
@@ -338,7 +336,8 @@ dynamicIntArray_t *dynamicIntArrayRemoveAt(dynamicIntArray_t *array, int index)
 	}
 
 	int size = array->size;
-	int tempArraySize = size - (index + 1);
+	int positionOfCopy = index + 1;
+	int tempArraySize = size - positionOfCopy;
 	dynamicIntArray_t tempArray;
 
 	if(dynamicIntArrayInitialize(&tempArray, tempArraySize) == FAIL)
@@ -347,7 +346,7 @@ dynamicIntArray_t *dynamicIntArrayRemoveAt(dynamicIntArray_t *array, int index)
 		return NULL;
 	}
 
-	if (dynamicIntArrayCopy(&tempArray, 0, array, (index + 1), tempArraySize) == FAIL)
+	if (dynamicIntArrayCopy(&tempArray, 0, array, positionOfCopy, tempArraySize) == FAIL)
 	{
 		printMsg("배열 복사 오류. dynamicIntArrayCopy 동작 실패. (dynamicIntArrayRemoveAt, tempArray -> array)", DEBUG, 0);
 		return NULL;
@@ -625,43 +624,22 @@ int dynamicIntArrayCopy(const dynamicIntArray_t *dst, int dstIndex, const dynami
 		return FAIL;
 	}
 
-	int srcSize = dynamicIntArrayGetSize(src);
-	if(srcSize == UNKNOWN)
-	{
-		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayCopy, array:%p)", DEBUG, 1, src);
-		return FAIL;
-	}
-
+	int srcSize = src->size;
 	if(size > (srcSize - srcIndex))
 	{
 		printMsg("복사하려는 크기가 지정한 인덱스부터 배열의 마지막까지의 크기보다 큼. (dynamicIntArrayCopy, size:%d, srcSize:%d, srcIndex:%d)", DEBUG, 3, size, srcSize, srcIndex);
 		return FAIL;
 	}
 
-	int dstSize = dynamicIntArrayGetSize(dst);
-	if(dstSize == UNKNOWN)
-	{
-		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayCopy, array:%p)", DEBUG, 1, dst);
-		return FAIL;
-	}
-
+	int dstSize = dst->size;
 	if(size > (dstSize - dstIndex))
 	{
 		printMsg("복사하려는 크기가 지정한 인덱스부터 배열의 마지막까지의 크기보다 큼. (dynamicIntArrayCopy, size:%d, dstSize:%d, dstIndex:%d)", DEBUG, 3, size, dstSize, dstIndex);
 		return FAIL;
 	}
 
-	int *dstArrayData = dynamicIntArrayGetArrayPtr(dst);
-	if(checkObjectNull(dstArrayData, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArrayCopy)") == YES)
-	{
-		return FAIL;
-	}
-
-	int *srcArrayData = dynamicIntArrayGetArrayPtr(src);
-	if(checkObjectNull(srcArrayData, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArrayCopy)") == YES)
-	{
-		return FAIL;
-	}
+	int *dstArrayData = dst->data;
+	int *srcArrayData = src->data;
 
 	dstArrayData += dstIndex;
 	srcArrayData += srcIndex;
@@ -954,7 +932,7 @@ static int getBufferSize(const char *msg, ...)
  * @brief 정수의 자리수를 계산해서 반환하는 함수
  * 음수이면 '-' 부호도 자리수에 포함한다.
  * @param number 자리수를 계산할 정수(입력)
- * @return 성공 시 숫자의 자리수, 실패 시 FAIL 반환
+ * @return 항상 숫자의 자리수 반환
  */
 static int getDigitOfNumber(int number)
 {
@@ -968,6 +946,7 @@ static int getDigitOfNumber(int number)
 		countOfDigit++;
 		number /= 10;
 	}
+
 	return countOfDigit;
 
 	/* if (sprintf(buf, "%d", number) < 0)
