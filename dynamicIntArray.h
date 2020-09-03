@@ -71,7 +71,7 @@ int dynamicIntArrayIndexOf(const dynamicIntArray_t *array, int datum);
 int dynamicIntArrayLastIndexOf(const dynamicIntArray_t *array, int datum);
 int dynamicIntArrayFind(const dynamicIntArray_t *array, compareInt1Param_f func);
 
-dynamicIntArray_t *dynamicIntArrayCopy(dynamicIntArray_t *dst, int dstIndex, const dynamicIntArray_t *src, int srcIndex, int size);
+int dynamicIntArrayCopy(const dynamicIntArray_t *dst, int dstIndex, const dynamicIntArray_t *src, int srcIndex, int size);
 dynamicIntArray_t *dynamicIntArrayClone(const dynamicIntArray_t *original);
 
 int dynamicIntArrayReverse(const dynamicIntArray_t *array);

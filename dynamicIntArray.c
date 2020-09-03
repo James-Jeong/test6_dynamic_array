@@ -294,7 +294,7 @@ dynamicIntArray_t *dynamicIntArrayInsertAt(dynamicIntArray_t *array, int index, 
 		return NULL;
 	}
 
-	if (dynamicIntArrayCopy(&tempArray, 0, array, index, tempArraySize) == NULL)
+	if (dynamicIntArrayCopy(&tempArray, 0, array, index, tempArraySize) == FAIL)
 	{
 		printMsg("배열 복사 오류. dynamicIntArrayCopy 동작 실패. (dynamicIntArrayInsertAt, array -> tempArray)", DEBUG, 0);
 		return NULL;
@@ -306,7 +306,7 @@ dynamicIntArray_t *dynamicIntArrayInsertAt(dynamicIntArray_t *array, int index, 
 		return NULL;
 	}
 
-	if (dynamicIntArrayCopy(array, (index + 1), &tempArray, 0, tempArraySize) == NULL)
+	if (dynamicIntArrayCopy(array, (index + 1), &tempArray, 0, tempArraySize) == FAIL)
 	{
 		printMsg("배열 복사 오류. dynamicIntArrayCopy 동작 실패. (dynamicIntArrayInsertAt, tempArray -> array)", DEBUG, 0);
 		return NULL;
@@ -347,13 +347,13 @@ dynamicIntArray_t *dynamicIntArrayRemoveAt(dynamicIntArray_t *array, int index)
 		return NULL;
 	}
 
-	if (dynamicIntArrayCopy(&tempArray, 0, array, (index + 1), tempArraySize) == NULL)
+	if (dynamicIntArrayCopy(&tempArray, 0, array, (index + 1), tempArraySize) == FAIL)
 	{
 		printMsg("배열 복사 오류. dynamicIntArrayCopy 동작 실패. (dynamicIntArrayRemoveAt, tempArray -> array)", DEBUG, 0);
 		return NULL;
 	}
 
-	if (dynamicIntArrayCopy(array, index, &tempArray, 0, tempArraySize) == NULL)
+	if (dynamicIntArrayCopy(array, index, &tempArray, 0, tempArraySize) == FAIL)
 	{
 		printMsg("배열 복사 오류. dynamicIntArrayCopy 동작 실패. (dynamicIntArrayRemoveAt, array -> tempArray)", DEBUG, 0);
 		return NULL;
@@ -596,71 +596,71 @@ int dynamicIntArrayGetSize(const dynamicIntArray_t *array)
 }
 
 /**
- * @fn dynamicIntArray_t *dynamicIntArrayCopy(dynamicIntArray_t *dst, int dstIndex, dynamicIntArray_t *src, int srcIndex, int size)
+ * @fn int dynamicIntArrayCopy(dynamicIntArray_t *dst, int dstIndex, dynamicIntArray_t *src, int srcIndex, int size)
  * @brief 하나의 동적 배열 관리 구조체의 동적 배열을 다른 동적 배열 관리 구조체의 동적 배열로 복사하는 함수
- * @param dst 복사될 동적 배열 관리 구조체 포인터(출력)
+ * @param dst 복사될 동적 배열 관리 구조체 포인터(출력, 읽기 전용)
  * @param dstIndex 복사될 배열의 시작 인덱스(입력)
  * @param src 복사할 동적 배열 관리 구조체 포인터(입력, 읽기 전용)
  * @param srcIndex 복사할 배열의 시작 인덱스(입력)
  * @param size 복사할 크기(입력)
- * @return 성공 시 복사된 동적 배열 관리 구조체의 주소, 메모리 참조 실패 또는 복사할 크기가 0 이하면 NULL 반환
+ * @return 성공 시 SUCCESS, 실패 시 FAIL 반환
  */
-dynamicIntArray_t *dynamicIntArrayCopy(dynamicIntArray_t *dst, int dstIndex, const dynamicIntArray_t *src, int srcIndex, int size)
+int dynamicIntArrayCopy(const dynamicIntArray_t *dst, int dstIndex, const dynamicIntArray_t *src, int srcIndex, int size)
 {
 	if(size <= 0)
 	{
 		printMsg("복사 실패. 복사할 크기가 0. (dynamicIntArrayCopy, size:%d)", DEBUG, 1, size);
-		return NULL;
+		return FAIL;
 	}
 
 	if(dynamicIntArrayCheckBoundary(dst, dstIndex) == FAIL)
 	{
 		printMsg("복사 실패. destination 인덱스 오류. (dynamicIntArrayCopy)", ERROR, 0);
-		return NULL;
+		return FAIL;
 	}
 
 	if(dynamicIntArrayCheckBoundary(src, srcIndex) == FAIL)
 	{
 		printMsg("복사 실패. source 인덱스 오류. (dynamicIntArrayCopy)", ERROR, 0);
-		return NULL;
+		return FAIL;
 	}
 
 	int srcSize = dynamicIntArrayGetSize(src);
 	if(srcSize == UNKNOWN)
 	{
 		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayCopy, array:%p)", DEBUG, 1, src);
-		return NULL;
+		return FAIL;
 	}
 
 	if(size > (srcSize - srcIndex))
 	{
 		printMsg("복사하려는 크기가 지정한 인덱스부터 배열의 마지막까지의 크기보다 큼. (dynamicIntArrayCopy, size:%d, srcSize:%d, srcIndex:%d)", DEBUG, 3, size, srcSize, srcIndex);
-		return NULL;
+		return FAIL;
 	}
 
 	int dstSize = dynamicIntArrayGetSize(dst);
 	if(dstSize == UNKNOWN)
 	{
 		printMsg("dynamicIntArrayGetSize 실패. (dynamicIntArrayCopy, array:%p)", DEBUG, 1, dst);
-		return NULL;
+		return FAIL;
 	}
 
 	if(size > (dstSize - dstIndex))
 	{
 		printMsg("복사하려는 크기가 지정한 인덱스부터 배열의 마지막까지의 크기보다 큼. (dynamicIntArrayCopy, size:%d, dstSize:%d, dstIndex:%d)", DEBUG, 3, size, dstSize, dstIndex);
-		return NULL;
+		return FAIL;
 	}
 
 	int *dstArrayData = dynamicIntArrayGetArrayPtr(dst);
 	if(checkObjectNull(dstArrayData, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArrayCopy)") == YES)
 	{
-		return NULL;
+		return FAIL;
 	}
 
 	int *srcArrayData = dynamicIntArrayGetArrayPtr(src);
 	if(checkObjectNull(srcArrayData, "메모리 참조 실패, 동적 배열이 NULL. (dynamicIntArrayCopy)") == YES)
 	{
-		return NULL;
+		return FAIL;
 	}
 
 	dstArrayData += dstIndex;
@@ -671,7 +671,7 @@ dynamicIntArray_t *dynamicIntArrayCopy(dynamicIntArray_t *dst, int dstIndex, con
 		*dstArrayData++ = *srcArrayData++;
 	}
 
-	return dst;
+	return SUCCESS;
 }
 
 /**
@@ -695,7 +695,7 @@ dynamicIntArray_t *dynamicIntArrayClone(const dynamicIntArray_t *original)
 		return NULL;
 	}
 
-	if (dynamicIntArrayCopy(new, 0, original, 0, size) == NULL)
+	if (dynamicIntArrayCopy(new, 0, original, 0, size) == FAIL)
 	{
 		printMsg("구조체 복제 실패. (dynamicIntArrayClone, new:%p, original:%p, size:%d)", DEBUG, 3, new, original, size);
 		dynamicIntArrayDelete(&new);
@@ -970,12 +970,11 @@ static int getDigitOfNumber(int number)
 	}
 	return countOfDigit;
 
-//	char buf[16] = { '\0' };
-//	if (sprintf(buf, "%d", number) < 0)
-//	{
-//		return FAIL;
-//	}
-//	return strlen(buf);
+	/* if (sprintf(buf, "%d", number) < 0)
+	{
+		return FAIL;
+	}
+	return strlen(buf); */
 }
 
 /**
