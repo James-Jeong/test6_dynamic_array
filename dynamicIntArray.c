@@ -786,19 +786,12 @@ char *dynamicIntArrayToString(dynamicIntArray_t *array)
 	// 이전에 한 번 이상 호출되었다면, 내용을 모두 지우고 새로운 크기로 재생성한다.
 	else
 	{
-		char prevString[strlen(array->stringOfArray) + 1];
-		string = array->stringOfArray;
-
-		strncpy(prevString, string, sizeof(prevString));
-		memset(array->stringOfArray, 0, sizeof(prevString));
-
 		string = (char*)realloc(array->stringOfArray, (size_t)stringLength);
 		if(checkObjectNull(string, "메모리 참조 실패, 재생성한 문자열이 NULL. (dynamicIntArrayToString)") == YES)
 		{
-			array->stringOfArray = string;
-			strncpy(array->stringOfArray, prevString, sizeof(prevString));
 			return NULL;
 		}
+		memset(string, 0, strlen(string));
 	}
 
 	// 3. 생성한 문자열에 동적 배열에 저장된 값을 하나씩 문자열로 변환해서 추가한다.
