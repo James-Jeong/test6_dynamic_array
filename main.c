@@ -123,6 +123,8 @@ int main(int argc, char **argv)
 		printMsg("dynamicIntArrayRemoveAt 실패.", ERROR, 0);
 		//return FAIL;
 	}
+	
+	printMsg(dynamicIntArrayToString(array), NORMAL, 0);
 	//////////////////////////////////////////////////////////////
 
 	//////////////////////////////////////////////////////////////
