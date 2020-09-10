@@ -530,7 +530,7 @@ int dynamicIntArrayReverse(const dynamicIntArray_t *array)
 	int rightValue = UNKNOWN;
 	int leftValue = UNKNOWN;
 
-	for( ; loopIndex < size; loopIndex++)
+	for( ; loopIndex < (size / 2); loopIndex++)
 	{
 		if((size - (loopIndex + 1)) <= loopIndex) break;
 
