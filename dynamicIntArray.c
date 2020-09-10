@@ -409,12 +409,12 @@ int dynamicIntArrayIndexOf(const dynamicIntArray_t *array, int datum)
 	int targetIndex = UNKNOWN;
 	int value = UNKNOWN;
 	int loopIndex = 0;
-	int isError[1] = { FAIL };
+	int isError = FAIL;
 
 	for (; loopIndex < size; loopIndex++)
 	{
-		value = dynamicIntArrayGetElement(array, loopIndex, isError);
-		if(*isError == FAIL) 
+		value = dynamicIntArrayGetElement(array, loopIndex, &isError);
+		if(isError == FAIL) 
 		{
 			printMsg("동적 배열 원소 조회 실패. dynamicIntArrayGetElement 실패. (dynamicIntArrayIndexOf)", ERROR, 0);
 			return FAIL;
@@ -449,12 +449,12 @@ int dynamicIntArrayLastIndexOf(const dynamicIntArray_t *array, int datum)
 	int targetIndex = UNKNOWN;
 	int value = UNKNOWN;
 	int loopIndex = size - 1;
-	int isError[1] = { FAIL };
+	int isError = FAIL;
 
 	for (; loopIndex >= 0; loopIndex--)
 	{
-		value = dynamicIntArrayGetElement(array, loopIndex, isError);
-		if(*isError == FAIL)
+		value = dynamicIntArrayGetElement(array, loopIndex, &isError);
+		if(isError == FAIL)
 		{
 			printMsg("동적 배열 원소 조회 실패. dynamicIntArrayGetElement 실패. (dynamicIntArrayLastIndexOf)", ERROR, 0);
 			return FAIL;
@@ -489,12 +489,12 @@ int dynamicIntArrayFind(const dynamicIntArray_t *array, compareInt1Param_f func)
 	int targetIndex = UNKNOWN;
 	int value = UNKNOWN;
 	int loopIndex = 0;
-	int isError[1] = { FAIL };
+	int isError = FAIL;
 
 	for (; loopIndex < size; loopIndex++)
 	{
-		value = dynamicIntArrayGetElement(array, loopIndex, isError);
-		if(*isError == FAIL)
+		value = dynamicIntArrayGetElement(array, loopIndex, &isError);
+		if(isError == FAIL)
 		{
 			printMsg("동적 배열 원소 조회 실패. dynamicIntArrayGetElement 실패. (dynamicIntArrayFind)", ERROR, 0);
 			return FAIL;
@@ -525,10 +525,43 @@ int dynamicIntArrayReverse(const dynamicIntArray_t *array)
 		return FAIL;
 	}
 
+	int isError = FAIL;
 	int loopIndex = 0;
-	int reverseLoopIndex = size - 1;
-	int tempArrayValue = UNKNOWN;
-	int isError[1] = { FAIL };
+	int rightValue = UNKNOWN;
+	int leftValue = UNKNOWN;
+
+	for( ; loopIndex < size; loopIndex++)
+	{
+		if((size - (loopIndex + 1)) <= loopIndex) break;
+
+		rightValue = dynamicIntArrayGetElement(array, (size - (loopIndex + 1)), &isError);
+		if(isError == FAIL)
+		{
+			printMsg("동적 배열 원소 조회 실패. dynamicIntArrayGetElement 실패. (dynamicIntArrayReverse)", ERROR, 0);
+			return FAIL;
+		}
+
+		leftValue = dynamicIntArrayGetElement(array, loopIndex, &isError);
+		if(isError == FAIL)
+		{
+			printMsg("동적 배열 원소 조회 실패. dynamicIntArrayGetElement 실패. (dynamicIntArrayReverse)", ERROR, 0);
+			return FAIL;
+		}
+
+		if(dynamicIntArraySetElement(array, (size - (loopIndex + 1)), leftValue) == FAIL)
+		{
+			printMsg("배열 저장 오류. dynamicIntArraySetElement 동작 실패. (dynamicIntArrayReverse)", DEBUG, 0);
+			return FAIL;
+		}
+
+		if(dynamicIntArraySetElement(array, loopIndex, rightValue) == FAIL)
+		{
+			printMsg("배열 저장 오류. dynamicIntArraySetElement 동작 실패. (dynamicIntArrayReverse)", DEBUG, 0);
+			return FAIL;
+		}
+	}
+
+/*	int reverseLoopIndex = size - 1;
 	dynamicIntArray_t *tempArray;
 
 	if ((tempArray = dynamicIntArrayClone(array)) == NULL)
@@ -539,8 +572,8 @@ int dynamicIntArrayReverse(const dynamicIntArray_t *array)
 
 	for (loopIndex = 0; loopIndex < size; loopIndex++)
 	{
-		tempArrayValue = dynamicIntArrayGetElement(tempArray, reverseLoopIndex, isError);
-		if(*isError == FAIL)
+		tempArrayValue = dynamicIntArrayGetElement(tempArray, reverseLoopIndex, &isError);
+		if(isError == FAIL)
 		{
 			printMsg("동적 배열 원소 조회 실패. dynamicIntArrayGetElement 실패. (dynamicIntArrayReverse)", ERROR, 0);
 			return FAIL;
@@ -556,6 +589,7 @@ int dynamicIntArrayReverse(const dynamicIntArray_t *array)
 	}
 
 	dynamicIntArrayDelete(&tempArray);
+*/
 	return SUCCESS;
 }
 
@@ -783,7 +817,7 @@ char *dynamicIntArrayToString(dynamicIntArray_t *array)
 			return NULL;
 		}
 	}
-	// 이전에 한 번 이상 호출되었다면, 내용을 모두 지우고 새로운 크기로 재생성한다.
+	// 이전에 한 번 이상 호출되었다면, 새로운 크기로 재생성하고 내용을 모두 지운다.
 	else
 	{
 		string = (char*)realloc(array->stringOfArray, (size_t)stringLength);
